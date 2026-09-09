@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>カウンター ＆ チンチロリン</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card-bg: #ffffff;
+      --text: #1d1d1f;
+      --text-sub: #86868b;
+      --primary: #007aff;
+      --primary-active: #005ecb;
+      --indigo: #4f46e5;
+      --indigo-active: #4338ca;
+      --amber: #f59e0b;
+      --rose: #e11d48;
+      --emerald: #10b981;
+      --gray-btn: #8e8e93;
+      --gray-btn-active: #6e6e73;
+      --border: #e5e5ea;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 最上部タブバー */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .tab-bar-container {
+      max-width: 480px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tab-group {
+      flex: 1;
+      display: flex;
+      background: #e9e9eb;
+      padding: 3px;
+      border-radius: 12px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text-sub);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .sound-toggle-btn {
+      background: #e9e9eb;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* メインコンテナ */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* ========================================================
+       カウンター画面
+       ======================================================== */
+    .counter-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .step-selector {
+      display: flex;
+      align-items: center;
+      background: #e5e5ea;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+
+    .step-btn {
+      border: none;
+      background: transparent;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #636366;
+    }
+
+    .step-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    #count {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: min(28vw, 180px);
+      font-weight: 700;
+      color: #1d1d1f;
+      cursor: pointer;
+      transition: transform 0.05s ease;
+    }
+
+    #count:active {
+      transform: scale(0.96);
+    }
+
+    .counter-buttons {
+      display: flex;
+      width: 100%;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .counter-buttons button {
+      border: none;
+      font-size: 24px;
+      font-weight: 600;
+      padding: 26px 0;
+      cursor: pointer;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    #decrement {
+      background: #d1d1d6;
+      color: #48484a;
+      flex: 0 0 75px;
+      font-size: 22px;
+    }
+    #decrement:active { background: #b8b8bd; }
+
+    #increment {
+      background: var(--primary);
+      flex: 1;
+      font-size: 28px;
+    }
+    #increment:active { background: var(--primary-active); }
+
+    #reset {
+      background: var(--gray-btn);
+      flex: 0 0 110px;
+      font-size: 18px;
+    }
+    #reset:active { background: var(--gray-btn-active); }
+
+    /* ========================================================
+       チンチロリン画面
+       ======================================================== */
+    .chinchiro-mode-bar {
+      display: flex;
+      background: #e5e5ea;
+      padding: 3px;
+      border-radius: 10px;
+      margin: 8px 16px 4px;
+      max-width: 480px;
+      width: calc(100% - 32px);
+      align-self: center;
+    }
+
+    .chinchiro-sub-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #636366;
+      transition: all 0.15s ease;
+    }
+
+    .chinchiro-sub-tab.active {
+      background: #fff;
+      color: var(--indigo);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+
+    .chinchiro-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 8px 16px 0;
+    }
+
+    /* ダイスコンテナ */
+    .dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px 16px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      margin-bottom: 12px;
+    }
+
+    .dice {
+      width: 74px;
+      height: 74px;
+      background: #fff;
+      border: 1px solid #d1d1d6;
+      border-radius: 18px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s ease;
+    }
+
+    .dice.rolling {
+      animation: diceRoll 0.6s infinite ease-in-out;
+    }
+
+    @keyframes diceRoll {
+      0% { transform: rotate(0deg) translateY(0); }
+      25% { transform: rotate(-16deg) translateY(-12px); }
+      50% { transform: rotate(20deg) translateY(3px); }
+      75% { transform: rotate(-10deg) translateY(-8px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    /* サイコロのドット配置 */
+    .dice-dots {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      padding: 10px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      background: #1d1d1f;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    .dot-red {
+      width: 24px;
+      height: 24px;
+      background: #dc2626;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 役結果カード */
+    .yaku-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 12px;
+      min-height: 105px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .badge-pinzoro { background: var(--amber); }
+    .badge-zorome  { background: var(--indigo); }
+    .badge-shigoro { background: var(--emerald); }
+    .badge-normal  { background: var(--primary); }
+    .badge-menashi { background: #8e8e93; }
+    .badge-hifumi  { background: var(--rose); }
+
+    .yaku-desc {
+      font-size: 13px;
+      font-weight: 600;
+      color: #48484a;
+    }
+
+    .dice-digits {
+      font-size: 11px;
+      font-family: monospace;
+      color: #8e8e93;
+      background: #f2f2f7;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* 対戦ゲーム用カード */
+    .game-section {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .status-banner {
+      background: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      color: #9d174d;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .parent-banner {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+
+    .btn-action {
+      width: 100%;
+      border: none;
+      background: var(--indigo);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 22px 0;
+      border-radius: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-action:active {
+      background: var(--indigo-active);
+    }
+
+    .btn-action:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+    }
+
+    .btn-pass {
+      background: #fff;
+      border: 1px solid #d97706;
+      color: #b45309;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-pass:hover { background: #fef3c7; }
+
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #fff;
+      width: 100%;
+      max-width: 440px;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+
+    .rule-list {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rule-item {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 最上部タブバー -->
+  <header>
+    <div class="tab-bar-container">
+      <div class="tab-group">
+        <button id="tab-counter-btn" class="tab-btn active" onclick="switchMainTab('counter')">
+          <span>🔢 カウンター</span>
+        </button>
+        <button id="tab-chinchiro-btn" class="tab-btn" onclick="switchMainTab('chinchiro')">
+          <span>🎲 チンチロリン</span>
+        </button>
+      </div>
+      <button id="sound-btn" class="sound-toggle-btn" onclick="toggleSound()" title="効果音切り替え">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==========================================
+         1. カウンター画面
+         ========================================== -->
+    <div id="view-counter" class="view-panel active">
+      <div class="counter-top-bar">
+        <div class="step-selector">
+          <span style="padding-left: 6px;">加算:</span>
+          <button class="step-btn active" onclick="setStep(1, this)">+1</button>
+          <button class="step-btn" onclick="setStep(5, this)">+5</button>
+          <button class="step-btn" onclick="setStep(10, this)">+10</button>
+        </div>
+        <span>画面タップで加算</span>
+      </div>
+
+      <div id="count" onclick="handleCountIncrement()">0</div>
+
+      <div class="counter-buttons">
+        <button id="decrement" onclick="handleCountDecrement()">−</button>
+        <button id="increment" onclick="handleCountIncrement()">+1</button>
+        <button id="reset" onclick="handleCountReset()">リセット</button>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         2. チンチロリン画面
+         ========================================== -->
+    <div id="view-chinchiro" class="view-panel">
+      <!-- チンチロリン内のサブタブ -->
+      <div class="chinchiro-mode-bar">
+        <button id="subtab-game" class="chinchiro-sub-tab active" onclick="switchChinchiroSubTab('game')">
+          対戦ゲーム（手順ルール）
+        </button>
+        <button id="subtab-free" class="chinchiro-sub-tab" onclick="switchChinchiroSubTab('free')">
+          フリー練習（自由ロール）
+        </button>
+      </div>
+
+      <!-- A. 対戦ゲームモード -->
+      <div id="chinchiro-game-mode" class="chinchiro-content" style="display: flex;">
+        <div style="flex: 1; overflow-y: auto;">
+          <!-- 現在のステータス情報 -->
+          <div id="game-status-banner" class="status-banner parent-banner">
+            <div>
+              <span id="game-parent-label">👑 親: あなた (P1)</span>
+              <div id="game-round-indicator" style="font-size: 11px; opacity: 0.8;">周回 1/3</div>
+            </div>
+            <button id="game-pass-parent-btn" class="btn-pass" onclick="gamePassParent()">親をパス</button>
+          </div>
+
+          <!-- 親と子の役情報 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 8px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #92400e;">👑 親の役</div>
+              <div id="game-parent-yaku-display" style="font-size: 13px; font-weight: 700; margin-top: 2px;">未確定</div>
+              <div id="game-parent-dice-display" style="font-size: 10px; color: #8e8e93; font-family: monospace;">---</div>
+            </div>
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 8px; text-align: center;">
+              <div id="game-child-title" style="font-size: 11px; font-weight: 700; color: #1e40af;">👤 今回の子</div>
+              <div id="game-child-yaku-display" style="font-size: 13px; font-weight: 700; margin-top: 2px;">親の役待ち</div>
+              <div id="game-child-dice-display" style="font-size: 10px; color: #8e8e93; font-family: monospace;">---</div>
+            </div>
+          </div>
+
+          <!-- ダイス描画 -->
+          <div class="dice-container">
+            <div id="game-dice-1" class="dice"><div class="dice-dots"></div></div>
+            <div id="game-dice-2" class="dice"><div class="dice-dots"></div></div>
+            <div id="game-dice-3" class="dice"><div class="dice-dots"></div></div>
+          </div>
+
+          <!-- メッセージ案内 -->
+          <div class="yaku-card" style="min-height: 80px;">
+            <div id="game-message" class="yaku-desc" style="font-size: 14px; color: #1d1d1f;">
+              ゲーム準備中
+            </div>
+          </div>
+
+          <!-- 参加者チップ状況 -->
+          <div class="game-section" style="padding: 10px 14px;">
+            <div style="font-size: 12px; font-weight: 700; color: #636366; margin-bottom: 6px; display: flex; justify-content: space-between;">
+              <span>参加者の所持チップ</span>
+              <button onclick="openRulesModal()" style="border:none; background:none; color:var(--indigo); font-size:11px; font-weight:700; cursor:pointer;">役一覧</button>
+            </div>
+            <div id="game-player-chips-list" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 11px;">
+              <!-- JSで生成 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 下部アクションボタン -->
+        <div style="border-top: 1px solid var(--border);">
+          <button id="game-action-btn" class="btn-action" onclick="handleGameAction()">
+            サイコロを振る
+          </button>
+        </div>
+      </div>
+
+      <!-- B. フリー練習モード -->
+      <div id="chinchiro-free-mode" class="chinchiro-content" style="display: none;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <!-- 役一覧ボタン -->
+          <div style="text-align: right; margin-bottom: 8px;">
+            <button onclick="openRulesModal()" style="border:none; background:#e5e5ea; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; color:#48484a; cursor:pointer;">
+              📖 役一覧を見る
+            </button>
+          </div>
+
+          <!-- ダイス描画 -->
+          <div class="dice-container">
+            <div id="free-dice-1" class="dice"><div class="dice-dots"></div></div>
+            <div id="free-dice-2" class="dice"><div class="dice-dots"></div></div>
+            <div id="free-dice-3" class="dice"><div class="dice-dots"></div></div>
+          </div>
+
+          <!-- 役判定結果 -->
+          <div class="yaku-card">
+            <div id="free-badge" class="badge badge-shigoro">シション（4-5-6）</div>
+            <div id="free-desc" class="yaku-desc">縁起の良い上がり目！勝ち役（2倍払い）</div>
+            <div id="free-digits" class="dice-digits">出目: 4・5・6</div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border);">
+          <button id="free-roll-btn" class="btn-action" onclick="handleFreeRoll()">
+            サイコロを振る
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 役一覧モーダル -->
+  <div id="rules-modal" class="modal-overlay" onclick="closeRulesModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>チンチロリン役一覧</h3>
+        <button class="modal-close" onclick="closeRulesModal()">✕</button>
+      </div>
+      <div class="rule-list">
+        <div class="rule-item" style="background:#fffbeb; border-color:#fef3c7;">
+          <div>
+            <div style="font-weight:700; color:#92400e;">ピンゾロ (1-1-1)</div>
+            <div style="font-size:11px; color:#b45309;">最強の役！総取り・5倍付け</div>
+          </div>
+          <span style="background:var(--amber); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">最強</span>
+        </div>
+        <div class="rule-item" style="background:#eef2ff; border-color:#e0e7ff;">
+          <div>
+            <div style="font-weight:700; color:#3730a3;">ゾロ目 (2-2-2 〜 6-6-6)</div>
+            <div style="font-size:11px; color:#4338ca;">3つ同じ数字が揃う・3倍付け</div>
+          </div>
+          <span style="background:var(--indigo); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">大勝ち</span>
+        </div>
+        <div class="rule-item" style="background:#ecfdf5; border-color:#d1fae5;">
+          <div>
+            <div style="font-weight:700; color:#065f46;">シション / シゴロ (4-5-6)</div>
+            <div style="font-size:11px; color:#047857;">4-5-6の順子目。強役・2倍付け</div>
+          </div>
+          <span style="background:var(--emerald); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">強役</span>
+        </div>
+        <div class="rule-item" style="background:#eff6ff; border-color:#dbeafe;">
+          <div>
+            <div style="font-weight:700; color:#1e40af;">通常の目 (出目: 1〜6)</div>
+            <div style="font-size:11px; color:#2563eb;">2個揃った時の残り1個が出目になる</div>
+          </div>
+          <span style="background:var(--primary); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">通常</span>
+        </div>
+        <div class="rule-item" style="background:#f4f4f5; border-color:#e4e4e7;">
+          <div>
+            <div style="font-weight:700; color:#3f3f46;">役なし (目なし)</div>
+            <div style="font-size:11px; color:#71717a;">何も揃わなかった状態（負けやすい）</div>
+          </div>
+          <span style="background:#71717a; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">なし</span>
+        </div>
+        <div class="rule-item" style="background:#fff1f2; border-color:#ffe4e6;">
+          <div>
+            <div style="font-weight:700; color:#9f1239;">ヒフミ (1-2-3)</div>
+            <div style="font-size:11px; color:#be123c;">最弱の役！即負け・2倍払い</div>
+          </div>
+          <span style="background:var(--rose); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">負け役</span>
+        </div>
+      </div>
+      <button onclick="closeRulesModal()" style="margin-top:12px; width:100%; border:none; background:#1d1d1f; color:#fff; padding:12px; font-weight:700; border-radius:12px; cursor:pointer;">
+        閉じる
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       音響制御 (Web Audio API - 外部ファイル不要)
+       ======================================================== */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) audioCtx = new AudioCtxClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+    }
+
+    function playClick() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (e) {}
+    }
+
+    function playRollSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        for (let i = 0; i < 6; i++) {
+          const t = ctx.currentTime + i * 0.08;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300 + Math.random() * 400, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.04);
+        }
+      } catch (e) {}
+    }
+
+    function playWinSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const t = ctx.currentTime + idx * 0.07;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.35);
+        });
+      } catch (e) {}
+    }
+
+    /* ========================================================
+       タブ切り替え制御
+       ======================================================== */
+    function switchMainTab(tab) {
+      playClick();
+      document.getElementById('tab-counter-btn').classList.toggle('active', tab === 'counter');
+      document.getElementById('tab-chinchiro-btn').classList.toggle('active', tab === 'chinchiro');
+      document.getElementById('view-counter').classList.toggle('active', tab === 'counter');
+      document.getElementById('view-chinchiro').classList.toggle('active', tab === 'chinchiro');
+    }
+
+    function switchChinchiroSubTab(sub) {
+      playClick();
+      document.getElementById('subtab-game').classList.toggle('active', sub === 'game');
+      document.getElementById('subtab-free').classList.toggle('active', sub === 'free');
+      document.getElementById('chinchiro-game-mode').style.display = sub === 'game' ? 'flex' : 'none';
+      document.getElementById('chinchiro-free-mode').style.display = sub === 'free' ? 'flex' : 'none';
+    }
+
+    /* ========================================================
+       カウンター機能
+       ======================================================== */
+    let count = 0;
+    let stepValue = 1;
+    const countDisplay = document.getElementById('count');
+    const incBtn = document.getElementById('increment');
+
+    function setStep(val, btn) {
+      playClick();
+      stepValue = val;
+      document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      incBtn.textContent = '+' + stepValue;
+    }
+
+    function handleCountIncrement() {
+      playClick();
+      count += stepValue;
+      countDisplay.textContent = count;
+    }
+
+    function handleCountDecrement() {
+      playClick();
+      count = Math.max(0, count - stepValue);
+      countDisplay.textContent = count;
+    }
+
+    function handleCountReset() {
+      playClick();
+      count = 0;
+      countDisplay.textContent = count;
+    }
+
+    /* ========================================================
+       サイコロ描画・役判定共通ロジック
+       ======================================================== */
+    function renderDiceFace(el, val) {
+      const dotsContainer = el.querySelector('.dice-dots');
+      dotsContainer.innerHTML = '';
+
+      if (val === 1) {
+        const dot = document.createElement('div');
+        dot.className = 'dot-red';
+        dotsContainer.appendChild(dot);
+        return;
+      }
+
+      // 2~6のドット配置座標 (%)
+      const positions = {
+        2: [[22, 22], [78, 78]],
+        3: [[22, 22], [50, 50], [78, 78]],
+        4: [[22, 22], [22, 78], [78, 22], [78, 78]],
+        5: [[22, 22], [22, 78], [50, 50], [78, 22], [78, 78]],
+        6: [[22, 20], [22, 50], [22, 80], [78, 20], [78, 50], [78, 80]],
+      };
+
+      (positions[val] || []).forEach(([x, y]) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.left = x + '%';
+        dot.style.top = y + '%';
+        dot.style.transform = 'translate(-50%, -50%)';
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    function evaluateDice(dice) {
+      const sorted = [...dice].sort((a, b) => a - b);
+      const [d1, d2, d3] = sorted;
+
+      if (d1 === 1 && d2 === 1 && d3 === 1) {
+        return { category: 'pinzoro', name: 'ピンゾロ', rank: 100, mult: 5, desc: '奇跡の出目！最強の勝ち役（5倍付け）', badgeClass: 'badge-pinzoro' };
+      }
+      if (d1 === d2 && d2 === d3) {
+        return { category: 'zorome', name: d1 + 'のゾロ目', rank: 80 + d1, mult: 3, desc: '3つすべて揃った大勝ち役（3倍付け）', badgeClass: 'badge-zorome' };
+      }
+      if (d1 === 4 && d2 === 5 && d3 === 6) {
+        return { category: 'shigoro', name: 'シション（シゴロ 4-5-6）', rank: 70, mult: 2, desc: '昇順の連番！強役（2倍付け）', badgeClass: 'badge-shigoro' };
+      }
+      if (d1 === 1 && d2 === 2 && d3 === 3) {
+        return { category: 'hifumi', name: 'ヒフミ (1-2-3)', rank: 1, mult: 2, desc: '最弱の出目…即負け（2倍払い）', badgeClass: 'badge-hifumi' };
+      }
+
+      let pt = null;
+      if (d1 === d2) pt = d3;
+      else if (d2 === d3) pt = d1;
+
+      if (pt !== null) {
+        return { category: 'normal', name: pt + 'の目', rank: 10 + pt, mult: 1, desc: '出目が「' + pt + '」に決まりました', badgeClass: 'badge-normal', point: pt };
+      }
+
+      return { category: 'menashi', name: '役なし（目なし）', rank: 5, mult: 1, desc: '3つの目がバラバラで役不成立', badgeClass: 'badge-menashi' };
+    }
+
+    /* ========================================================
+       フリーロール機能
+       ======================================================== */
+    let isFreeRolling = false;
+
+    function handleFreeRoll() {
+      if (isFreeRolling) return;
+      isFreeRolling = true;
+      playRollSound();
+
+      const d1El = document.getElementById('free-dice-1');
+      const d2El = document.getElementById('free-dice-2');
+      const d3El = document.getElementById('free-dice-3');
+      const btn = document.getElementById('free-roll-btn');
+
+      d1El.classList.add('rolling');
+      d2El.classList.add('rolling');
+      d3El.classList.add('rolling');
+      btn.disabled = true;
+      btn.textContent = '振っています…';
+
+      const interval = setInterval(() => {
+        renderDiceFace(d1El, Math.floor(Math.random() * 6) + 1);
+        renderDiceFace(d2El, Math.floor(Math.random() * 6) + 1);
+        renderDiceFace(d3El, Math.floor(Math.random() * 6) + 1);
+      }, 60);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        d1El.classList.remove('rolling');
+        d2El.classList.remove('rolling');
+        d3El.classList.remove('rolling');
+
+        const f1 = Math.floor(Math.random() * 6) + 1;
+        const f2 = Math.floor(Math.random() * 6) + 1;
+        const f3 = Math.floor(Math.random() * 6) + 1;
+        const finalDice = [f1, f2, f3];
+
+        renderDiceFace(d1El, f1);
+        renderDiceFace(d2El, f2);
+        renderDiceFace(d3El, f3);
+
+        const yaku = evaluateDice(finalDice);
+        const badge = document.getElementById('free-badge');
+        badge.className = 'badge ' + yaku.badgeClass;
+        badge.textContent = yaku.name;
+        document.getElementById('free-desc').textContent = yaku.desc;
+        document.getElementById('free-digits').textContent = '出目: ' + f1 + '・' + f2 + '・' + f3;
+
+        if (yaku.rank >= 70) playWinSound();
+
+        btn.disabled = false;
+        btn.textContent = 'サイコロを振る';
+        isFreeRolling = false;
+      }, 650);
+    }
+
+    /* ========================================================
+       チンチロリン対戦ゲームロジック
+       ======================================================== */
+    const players = [
+      { id: 'p1', name: 'あなた (P1)', isCpu: false, chips: 1000 },
+      { id: 'p2', name: 'CPU 太郎 (P2)', isCpu: true, chips: 1000 },
+      { id: 'p3', name: 'CPU 花子 (P3)', isCpu: true, chips: 1000 },
+    ];
+
+    let parentIdx = 0;
+    let roundCount = 0; // 何人親が回ったか
+    let gameState = 'betting'; // 'betting' | 'parent_roll' | 'child_roll' | 'round_end' | 'game_over'
+    let parentYaku = null;
+    let parentDice = [1, 1, 1];
+    let parentRollCount = 0;
+    let childQueue = [];
+    let currentChildQueueIdx = 0;
+    let currentChildRollCount = 0;
+    let currentChildDice = [1, 1, 1];
+    let bets = { p1: 100, p2: 100, p3: 100 };
+    let isGameRolling = false;
+
+    function initGame() {
+      parentIdx = 0;
+      roundCount = 0;
+      startParentRound(parentIdx);
+      updatePlayerChipsUI();
+      // 初期ダイス描画
+      renderDiceFace(document.getElementById('game-dice-1'), 1);
+      renderDiceFace(document.getElementById('game-dice-2'), 2);
+      renderDiceFace(document.getElementById('game-dice-3'), 3);
+      renderDiceFace(document.getElementById('free-dice-1'), 4);
+      renderDiceFace(document.getElementById('free-dice-2'), 5);
+      renderDiceFace(document.getElementById('free-dice-3'), 6);
+    }
+
+    function startParentRound(pIdx) {
+      parentIdx = pIdx;
+      parentYaku = null;
+      parentRollCount = 0;
+      childQueue = players.filter((_, idx) => idx !== parentIdx);
+      currentChildQueueIdx = 0;
+      currentChildRollCount = 0;
+
+      // 各子の賭け金 (所持金の10%程度、最大100)
+      childQueue.forEach(c => {
+        bets[c.id] = Math.min(100, Math.max(10, Math.floor(c.chips * 0.1)));
+      });
+
+      gameState = 'parent_roll';
+      updateGameUI();
+    }
+
+    function gamePassParent() {
+      if (gameState !== 'parent_roll') return;
+      playClick();
+      const nextIdx = (parentIdx + 1) % players.length;
+      document.getElementById('game-message').textContent = players[parentIdx].name + 'は親をパスしました。親が交代します。';
+      setTimeout(() => {
+        startParentRound(nextIdx);
+      }, 1000);
+    }
+
+    function handleGameAction() {
+      if (isGameRolling) return;
+
+      if (gameState === 'parent_roll') {
+        runParentRoll();
+      } else if (gameState === 'child_roll') {
+        runChildRoll();
+      } else if (gameState === 'round_end') {
+        nextTurnAfterRound();
+      } else if (gameState === 'game_over') {
+        resetAllGame();
+      }
+    }
+
+    function animateGameDice(callback) {
+      isGameRolling = true;
+      playRollSound();
+
+      const d1El = document.getElementById('game-dice-1');
+      const d2El = document.getElementById('game-dice-2');
+      const d3El = document.getElementById('game-dice-3');
+      const btn = document.getElementById('game-action-btn');
+
+      d1El.classList.add('rolling');
+      d2El.classList.add('rolling');
+      d3El.classList.add('rolling');
+      btn.disabled = true;
+
+      const interval = setInterval(() => {
+        renderDiceFace(d1El, Math.floor(Math.random() * 6) + 1);
+        renderDiceFace(d2El, Math.floor(Math.random() * 6) + 1);
+        renderDiceFace(d3El, Math.floor(Math.random() * 6) + 1);
+      }, 60);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        d1El.classList.remove('rolling');
+        d2El.classList.remove('rolling');
+        d3El.classList.remove('rolling');
+
+        const f1 = Math.floor(Math.random() * 6) + 1;
+        const f2 = Math.floor(Math.random() * 6) + 1;
+        const f3 = Math.floor(Math.random() * 6) + 1;
+        const finalDice = [f1, f2, f3];
+
+        renderDiceFace(d1El, f1);
+        renderDiceFace(d2El, f2);
+        renderDiceFace(d3El, f3);
+
+        const yaku = evaluateDice(finalDice);
+        btn.disabled = false;
+        isGameRolling = false;
+        callback(finalDice, yaku);
+      }, 600);
+    }
+
+    function runParentRoll() {
+      parentRollCount++;
+      animateGameDice((dice, yaku) => {
+        parentDice = dice;
+        // 役が出た、または3回振ったら決定
+        if (yaku.category !== 'menashi' || parentRollCount >= 3) {
+          parentYaku = yaku;
+          document.getElementById('game-parent-yaku-display').textContent = yaku.name;
+          document.getElementById('game-parent-dice-display').textContent = '[' + dice.join('-') + ']';
+          document.getElementById('game-message').textContent = '親【' + players[parentIdx].name + '】の役が【' + yaku.name + '】に確定！続いて子の番です。';
+
+          setTimeout(() => {
+            gameState = 'child_roll';
+            currentChildQueueIdx = 0;
+            currentChildRollCount = 0;
+            updateGameUI();
+            checkCpuAutoTurn();
+          }, 1200);
+        } else {
+          document.getElementById('game-message').textContent = '親の出目は役なし（目なし）でした。残り ' + (3 - parentRollCount) + ' 回振れます。';
+          updateGameUI();
+          checkCpuAutoTurn();
+        }
+      });
+    }
+
+    function runChildRoll() {
+      const child = childQueue[currentChildQueueIdx];
+      currentChildRollCount++;
+
+      animateGameDice((dice, yaku) => {
+        currentChildDice = dice;
+
+        if (yaku.category !== 'menashi' || currentChildRollCount >= 3) {
+          document.getElementById('game-child-yaku-display').textContent = yaku.name;
+          document.getElementById('game-child-dice-display').textContent = '[' + dice.join('-') + ']';
+
+          // 親と勝負
+          settleChildBattle(child, yaku);
+
+          setTimeout(() => {
+            currentChildQueueIdx++;
+            currentChildRollCount = 0;
+
+            if (currentChildQueueIdx < childQueue.length) {
+              updateGameUI();
+              checkCpuAutoTurn();
+            } else {
+              // 全員終了
+              gameState = 'round_end';
+              document.getElementById('game-message').textContent = '子全員との勝負が終了しました！「親交代」を押してください。';
+              updateGameUI();
+            }
+          }, 1800);
+        } else {
+          document.getElementById('game-message').textContent = child.name + 'は目なしでした。残り ' + (3 - currentChildRollCount) + ' 回振れます。';
+          updateGameUI();
+          checkCpuAutoTurn();
+        }
+      });
+    }
+
+    function settleChildBattle(child, childYaku) {
+      const bet = bets[child.id] || 100;
+      let won = false;
+      let draw = false;
+      let mult = 1;
+
+      if (childYaku.rank > parentYaku.rank) {
+        won = true;
+        mult = childYaku.mult;
+        if (parentYaku.category === 'hifumi') mult = Math.max(mult, 2);
+      } else if (childYaku.rank < parentYaku.rank) {
+        won = false;
+        mult = parentYaku.mult;
+        if (childYaku.category === 'hifumi') mult = Math.max(mult, 2);
+      } else {
+        draw = true;
+      }
+
+      const diff = bet * mult;
+      const parentPlayer = players[parentIdx];
+
+      if (draw) {
+        document.getElementById('game-message').textContent = child.name + '【' + childYaku.name + '】 vs 親【' + parentYaku.name + '】: 引き分け！';
+      } else if (won) {
+        child.chips += diff;
+        parentPlayer.chips = Math.max(0, parentPlayer.chips - diff);
+        document.getElementById('game-message').textContent = child.name + 'の勝ち！親から ' + diff + '点 獲得！';
+        playWinSound();
+      } else {
+        child.chips = Math.max(0, child.chips - diff);
+        parentPlayer.chips += diff;
+        document.getElementById('game-message').textContent = child.name + 'の負け…親へ ' + diff + '点 支払い。';
+      }
+
+      updatePlayerChipsUI();
+    }
+
+    function nextTurnAfterRound() {
+      playClick();
+      roundCount++;
+      if (roundCount >= players.length) {
+        gameState = 'game_over';
+        document.getElementById('game-message').textContent = '全員に親が回りました！ゲーム終了です！お疲れ様でした。';
+        document.getElementById('game-action-btn').textContent = '最初からもう一度遊ぶ';
+      } else {
+        const nextIdx = (parentIdx + 1) % players.length;
+        startParentRound(nextIdx);
+      }
+    }
+
+    function resetAllGame() {
+      playClick();
+      players.forEach(p => p.chips = 1000);
+      initGame();
+    }
+
+    function checkCpuAutoTurn() {
+      if (isGameRolling) return;
+      if (gameState === 'parent_roll' && players[parentIdx].isCpu) {
+        setTimeout(runParentRoll, 900);
+      } else if (gameState === 'child_roll') {
+        const child = childQueue[currentChildQueueIdx];
+        if (child && child.isCpu) {
+          setTimeout(runChildRoll, 900);
+        }
+      }
+    }
+
+    function updateGameUI() {
+      const parentPlayer = players[parentIdx];
+      document.getElementById('game-parent-label').textContent = '👑 親: ' + parentPlayer.name;
+      document.getElementById('game-round-indicator').textContent = '周回 ' + (roundCount + 1) + '/' + players.length;
+
+      const passBtn = document.getElementById('game-pass-parent-btn');
+      passBtn.style.display = (gameState === 'parent_roll' && !parentPlayer.isCpu) ? 'block' : 'none';
+
+      const btn = document.getElementById('game-action-btn');
+
+      if (gameState === 'parent_roll') {
+        document.getElementById('game-child-title').textContent = '👤 次の子';
+        document.getElementById('game-child-yaku-display').textContent = '親の役決定待ち';
+        document.getElementById('game-child-dice-display').textContent = '---';
+        if (parentPlayer.isCpu) {
+          btn.textContent = '親(CPU)が振っています…';
+          btn.disabled = true;
+        } else {
+          btn.textContent = '親がサイコロを振る (' + (parentRollCount + 1) + '/3回目)';
+          btn.disabled = false;
+        }
+      } else if (gameState === 'child_roll') {
+        const child = childQueue[currentChildQueueIdx];
+        if (child) {
+          document.getElementById('game-child-title').textContent = '👤 ' + child.name + ' (賭:' + bets[child.id] + '点)';
+          if (child.isCpu) {
+            btn.textContent = child.name + '(CPU)が振っています…';
+            btn.disabled = true;
+          } else {
+            btn.textContent = '子がサイコロを振る (' + (currentChildRollCount + 1) + '/3回目)';
+            btn.disabled = false;
+          }
+        }
+      } else if (gameState === 'round_end') {
+        btn.textContent = (roundCount + 1 >= players.length) ? '最終結果を確認' : '親を交代して次へ';
+        btn.disabled = false;
+      }
+    }
+
+    function updatePlayerChipsUI() {
+      const list = document.getElementById('game-player-chips-list');
+      list.innerHTML = '';
+      players.forEach((p, idx) => {
+        const item = document.createElement('div');
+        item.style.background = '#f2f2f7';
+        item.style.padding = '6px';
+        item.style.borderRadius = '8px';
+        item.style.textAlign = 'center';
+        const isParent = idx === parentIdx;
+        item.innerHTML = '<div style="font-weight:700; color:' + (isParent ? '#b45309' : '#1d1d1f') + ';">' + (isParent ? '👑' : '') + p.name + '</div><div style="color:#d97706; font-weight:700;">' + p.chips + '点</div>';
+        list.appendChild(item);
+      });
+    }
+
+    /* モーダル */
+    function openRulesModal() {
+      playClick();
+      document.getElementById('rules-modal').classList.add('open');
+    }
+    function closeRulesModal() {
+      playClick();
+      document.getElementById('rules-modal').classList.remove('open');
+    }
+
+    // 初期化実行
+    window.onload = () => {
+      initGame();
+    };
+  </script>
+</body>
+</html>
