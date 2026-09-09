@@ -84,6 +84,7 @@ export default defineConfig(() => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
           beerCounter: path.resolve(__dirname, 'beer-counter/index.html'),
+          stationTimer: path.resolve(__dirname, 'station-timer/index.html'),
         },
       },
     },
