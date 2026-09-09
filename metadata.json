@@ -1,6 +1,6 @@
 {
-  "name": "カウンター＆チンチロリン",
-  "description": "シンプルなカウンターと、サイコロ3つで役判定ができるチンチロリンの切り替えアプリ",
+  "name": "DevTools Portal",
+  "description": "個人開発したHTML/JSベースのWebツール集ポータル",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
