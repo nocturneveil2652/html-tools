@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<!-- Beer Counter App -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🍺 ビールカウンター</title>
+  <meta name="description" content="カウントアップに合わせてビールが並ぶ、飲酒・杯数記録カウンターアプリ">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-sub: #64748b;
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-200: #fde68a;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+      --border: #e2e8f0;
+      --border-amber: #fcd34d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 最上部ヘッダー */
+    header {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .header-container {
+      max-width: 520px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .top-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #f1f5f9;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      height: 38px;
+    }
+
+    .top-nav-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .title-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #92400e;
+      background: var(--amber-100);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--amber-200);
+    }
+
+    .sound-toggle-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+
+    .sound-toggle-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* メインコンテナ */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 上部ステップ切り替えバー */
+    .control-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 6px;
+      font-size: 12px;
+      color: var(--text-sub);
+      flex-shrink: 0;
+    }
+
+    .step-selector {
+      display: flex;
+      align-items: center;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 2px;
+    }
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      padding: 0 6px 0 8px;
+    }
+
+    .step-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #475569;
+      transition: all 0.15s ease;
+    }
+
+    .step-btn.active {
+      background: #ffffff;
+      color: var(--amber-700);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* カウント数表示エリア */
+    .count-display-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.05s ease;
+    }
+
+    .count-display-section:active {
+      transform: scale(0.97);
+    }
+
+    .count-number-wrapper {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    #count {
+      font-size: min(18vw, 84px);
+      font-weight: 900;
+      line-height: 1;
+      color: #78350f;
+      letter-spacing: -0.04em;
+      text-shadow: 0 2px 4px rgba(217, 119, 6, 0.15);
+    }
+
+    .count-unit {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--amber-600);
+    }
+
+    .cheers-toast {
+      font-size: 12px;
+      color: #b45309;
+      font-weight: 700;
+      background: #fef3c7;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-top: 2px;
+      border: 1px solid #fde68a;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+
+    .cheers-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 🍺 ビールが並ぶアリーナ（グリッドエリア） */
+    .beer-arena {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      margin: 6px 12px 12px;
+      background: radial-gradient(circle at 50% 10%, #fffdfa 0%, #fffbeb 100%);
+      border: 2px dashed #fcd34d;
+      border-radius: 20px;
+      box-shadow: inset 0 2px 8px rgba(245, 158, 11, 0.05);
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 空ステート */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #94a3b8;
+      padding: 24px 16px;
+      gap: 12px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: 0.7;
+      animation: floatBeer 2.4s ease-in-out infinite;
+    }
+
+    @keyframes floatBeer {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+    }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #78350f;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* ビールが並ぶグリッド */
+    .beer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+      gap: 10px;
+      width: 100%;
+      align-content: start;
+    }
+
+    /* ビールジョッキ 1つ */
+    .beer-item {
+      position: relative;
+      background: #ffffff;
+      border: 1.5px solid #fef08a;
+      border-radius: 14px;
+      padding: 8px 4px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08);
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: popInBeer 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popInBeer {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(16px) rotate(-10deg);
+      }
+      70% {
+        opacity: 1;
+        transform: scale(1.15) translateY(-2px) rotate(3deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+      }
+    }
+
+    .beer-item:active {
+      transform: scale(0.9) rotate(-6deg);
+    }
+
+    .beer-emoji {
+      font-size: 32px;
+      line-height: 1.1;
+      filter: drop-shadow(0 2px 3px rgba(180, 83, 9, 0.2));
+      transition: transform 0.15s ease;
+    }
+
+    .beer-item:hover .beer-emoji {
+      transform: scale(1.12);
+    }
+
+    .beer-number {
+      font-size: 10px;
+      font-weight: 800;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-top: 4px;
+      border: 1px solid #fde68a;
+      letter-spacing: -0.02em;
+    }
+
+    /* 泡エフェクト演出 */
+    .bubble-burst {
+      position: absolute;
+      pointer-events: none;
+      font-size: 14px;
+      animation: floatUpFade 0.6s forwards ease-out;
+    }
+
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.6); }
+      100% { opacity: 0; transform: translate(var(--bx, 0px), -36px) scale(1.2); }
+    }
+
+    /* 下部のボタングループ */
+    .counter-buttons {
+      display: flex;
+      width: 100%;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .counter-buttons button {
+      border: none;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 22px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.1s ease;
+    }
+
+    #decrement {
+      background: #f1f5f9;
+      color: #64748b;
+      flex: 0 0 80px;
+      font-size: 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    #decrement:active {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    #increment {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      flex: 1;
+      font-size: 24px;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      text-shadow: 0 1px 2px rgba(180, 83, 9, 0.4);
+    }
+
+    #increment:active {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      transform: scale(0.99);
+    }
+
+    #reset {
+      background: #f1f5f9;
+      color: #64748b;
+      flex: 0 0 90px;
+      font-size: 14px;
+      border-left: 1px solid var(--border);
+    }
+
+    #reset:active {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    /* リセット確認モーダル */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      border: 1px solid var(--border);
+      animation: popInModal 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popInModal {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .cancel-btn {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .cancel-btn:active {
+      background: #e2e8f0;
+    }
+
+    .confirm-btn {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
+    }
+
+    .confirm-btn:active {
+      background: #dc2626;
+    }
+
+    /* 飲酒タイマーカード */
+    .timer-card {
+      margin: 4px 12px 6px 12px;
+      padding: 8px 12px;
+      background: rgba(254, 243, 199, 0.4);
+      border: 1px solid #fde68a;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .timer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .timer-icon-badge {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      background: rgba(245, 158, 11, 0.18);
+      color: #b45309;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .timer-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .timer-primary-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timer-sub-text {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timer-btn-adjust {
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      background: #ffffff;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #92400e;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: background 0.1s ease;
+    }
+
+    .timer-btn-adjust:active {
+      background: #fef3c7;
+    }
+
+    /* 酔っ払い度ステータスカード */
+    .drunk-card {
+      margin: 4px 12px 2px 12px;
+      padding: 7px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .drunk-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .drunk-emoji {
+      flex: 0 0 auto;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .drunk-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .drunk-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .drunk-badge-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .drunk-status-name {
+      font-size: 13px;
+      font-weight: 900;
+      color: #1e293b;
+    }
+
+    .drunk-level-pill {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .drunk-rapid-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .drunk-desc {
+      font-size: 11px;
+      color: #475569;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drunk-gauge-container {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
+    .drunk-gauge {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .gauge-seg {
+      width: 7px;
+      height: 14px;
+      border-radius: 2px;
+      background: #e2e8f0;
+      transition: background 0.2s ease;
+    }
+
+    .gauge-count-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 最上部ヘッダー -->
+  <header>
+    <div class="header-container">
+      <a href="../" class="top-nav-btn" title="TOPポータルに戻る">
+        <span>← TOP</span>
+      </a>
+      <div class="title-badge">
+        <span>🍺</span>
+        <span>ビールカウンター</span>
+      </div>
+      <button id="sound-btn" class="sound-toggle-btn" onclick="toggleSound()" title="効果音切り替え">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <!-- メインエリア -->
+  <main>
+    <!-- 上部ステップ切替バー -->
+    <div class="control-top-bar">
+      <div class="step-selector">
+        <span class="step-label">加算:</span>
+        <button id="step-1" class="step-btn active" onclick="setStep(1, this)">+1</button>
+        <button id="step-5" class="step-btn" onclick="setStep(5, this)">+5</button>
+        <button id="step-10" class="step-btn" onclick="setStep(10, this)">+10</button>
+      </div>
+      <span class="hint-text">タップでもカウント🍺</span>
+    </div>
+
+    <!-- 🍶 画面上部：酔っ払い度ステータス表示カード -->
+    <div class="drunk-card" id="drunk-card">
+      <div class="drunk-left">
+        <div class="drunk-emoji" id="drunk-emoji">😌</div>
+        <div class="drunk-info">
+          <div class="drunk-title-row">
+            <span class="drunk-badge-label">酔っ払い度</span>
+            <span class="drunk-status-name" id="drunk-status-name">【素面（シラフ）】</span>
+            <span class="drunk-level-pill" id="drunk-level-pill">Lv.0/5</span>
+            <span class="drunk-rapid-tag" id="drunk-rapid-tag" style="display: none;">⚠️ ハイペース</span>
+          </div>
+          <div class="drunk-desc" id="drunk-desc">まだ素面です。マイペースに楽しもう！</div>
+        </div>
+      </div>
+      <div class="drunk-gauge-container">
+        <div class="drunk-gauge" id="drunk-gauge">
+          <div class="gauge-seg" id="seg-1"></div>
+          <div class="gauge-seg" id="seg-2"></div>
+          <div class="gauge-seg" id="seg-3"></div>
+          <div class="gauge-seg" id="seg-4"></div>
+          <div class="gauge-seg" id="seg-5"></div>
+        </div>
+        <span class="gauge-count-label" id="gauge-count-label">素面</span>
+      </div>
+    </div>
+
+    <!-- カウント数表示（タップでカウントアップ） -->
+    <div class="count-display-section" onclick="handleCountIncrement()">
+      <div class="count-number-wrapper">
+        <span id="count">0</span>
+        <span class="count-unit">杯</span>
+      </div>
+      <div id="cheers-toast" class="cheers-toast">✨ かんぱーい！</div>
+    </div>
+
+    <!-- ⏱️ 飲酒タイマー表示カード -->
+    <div class="timer-card" id="timer-card">
+      <div class="timer-left">
+        <div class="timer-icon-badge">⏱️</div>
+        <div class="timer-info">
+          <div class="timer-primary-text" id="timer-primary-text">飲み始め未記録（カウントで開始）</div>
+          <div class="timer-sub-text" id="timer-sub-text">「+1」カウントで自動スタート</div>
+        </div>
+      </div>
+      <button type="button" class="timer-btn-adjust" id="timer-adjust-btn" onclick="openTimerModal()">記録</button>
+    </div>
+
+    <!-- 🍺 ビールが並ぶアリーナ -->
+    <div class="beer-arena" id="beer-arena" onclick="handleArenaClick(event)">
+      <!-- 空ステート（カウント0の時） -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">🍺</div>
+        <div class="empty-title">まだビールはありません</div>
+        <div class="empty-desc">
+          「+1」ボタンや画面をタップして<br>飲んだ杯数をカウントしましょう！
+        </div>
+      </div>
+
+      <!-- ビールグリッド（カウント1以上の時） -->
+      <div id="beer-grid" class="beer-grid" style="display: none;"></div>
+    </div>
+
+    <!-- 下部操作ボタン -->
+    <div class="counter-buttons">
+      <button id="decrement" onclick="handleCountDecrement()" title="減らす">
+        <span>−</span>
+      </button>
+      <button id="increment" onclick="handleCountIncrement()" title="増やす">
+        <span>🍺</span>
+        <span id="inc-label">+1 杯</span>
+      </button>
+      <button id="reset" onclick="handleCountReset()" title="0に戻す">
+        <span>リセット</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- リセット確認モーダル -->
+  <div id="reset-modal" class="modal-overlay" onclick="closeResetModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">カウント＆タイマーのリセット</div>
+      <p class="modal-desc">
+        これまでの記録（<span id="reset-modal-count" style="font-weight: 800; color: #b45309;">0</span>杯）および飲酒タイマーの記録を0に戻しますか？
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn cancel-btn" onclick="closeResetModal()">キャンセル</button>
+        <button type="button" id="confirm-reset-btn" class="modal-btn confirm-btn" onclick="confirmReset()">リセットする</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 飲み始め時刻設定モーダル -->
+  <div id="timer-modal" class="modal-overlay" onclick="closeTimerModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-icon">⏱️</div>
+      <div class="modal-title">飲み始め時刻の設定</div>
+      <p class="modal-desc" id="timer-modal-desc">
+        何分前から飲んでいるかを設定できます
+      </p>
+
+      <!-- 🕒 hh:mm 直接指定入力フォーム -->
+      <div style="margin-bottom: 14px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-align: left;">
+        <label for="custom-time-input" style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 5px;">
+          🕒 開始時刻を直接指定 (hh:mm)
+        </label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input id="custom-time-input" type="time" style="flex: 1; padding: 6px 10px; font-size: 14px; font-weight: bold; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #1e293b;" />
+          <button type="button" onclick="applyCustomTimeInput()" style="padding: 6px 12px; font-size: 12px; font-weight: bold; background: #f59e0b; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
+            設定
+          </button>
+        </div>
+        <span style="font-size: 10px; color: #94a3b8; margin-top: 4px; display: block;">
+          例: 19:30から飲み始めた場合は「19:30」
+        </span>
+      </div>
+
+      <!-- クイック選択 -->
+      <div style="font-size: 11px; font-weight: 700; color: #64748b; text-align: left; margin-bottom: 6px; padding-left: 2px;">
+        クイック選択
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+        <button type="button" onclick="setQuickStartTime(0)" style="padding: 10px 6px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; font-weight: 700; font-size: 12px; color: #78350f; cursor: pointer;">
+          今すぐ開始<br><span style="font-size: 10px; font-weight: normal; color: #b45309;">（0分前）</span>
+        </button>
+        <button type="button" onclick="setQuickStartTime(15)" style="padding: 10px 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-weight: 700; font-size: 12px; color: #1e293b; cursor: pointer;">
+          15分前から<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">ちょっと前</span>
+        </button>
+        <button type="button" onclick="setQuickStartTime(30)" style="padding: 10px 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-weight: 700; font-size: 12px; color: #1e293b; cursor: pointer;">
+          30分前から<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">約半時間前</span>
+        </button>
+        <button type="button" onclick="setQuickStartTime(60)" style="padding: 10px 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-weight: 700; font-size: 12px; color: #1e293b; cursor: pointer;">
+          1時間前から<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">60分前</span>
+        </button>
+      </div>
+      <button type="button" id="timer-clear-btn" onclick="clearStartTime()" style="display: none; width: 100%; padding: 8px 0; margin-bottom: 12px; border-radius: 10px; font-size: 12px; font-weight: 700; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; cursor: pointer;">
+        タイマーのみ停止・クリア
+      </button>
+      <button type="button" class="modal-btn cancel-btn" onclick="closeTimerModal()" style="width: 100%;">閉じる</button>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       音響制御 (Web Audio API)
+       ======================================================== */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) audioCtx = new AudioCtxClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+    }
+
+    // ビールを注ぐ／乾杯の「チーン♪」音
+    function playCheersSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        // グラスが合わさる高音ベルトーン
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1760, now); // A6
+        gain1.gain.setValueAtTime(0.25, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.45);
+
+        // 泡が弾けるシュワっとしたノイズ
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(587.33, now); // D5
+        osc2.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gain2.gain.setValueAtTime(0.15, now);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now);
+        osc2.stop(now + 0.2);
+      } catch (e) {}
+    }
+
+    // 減らすクリック音
+    function playPopDownSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.08);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } catch (e) {}
+    }
+
+    // リセット音
+    function playResetSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } catch (e) {}
+    }
+
+    /* ========================================================
+       カウンター＆飲酒タイマー＆ビール並び替えロジック
+       ======================================================== */
+    const STORAGE_KEY_COUNT = 'beer_counter_val';
+    const STORAGE_KEY_START = 'beer_counter_start';
+
+    let count = parseInt(localStorage.getItem(STORAGE_KEY_COUNT) || '0', 10) || 0;
+    let startTime = parseInt(localStorage.getItem(STORAGE_KEY_START) || '0', 10) || null;
+    let stepValue = 1;
+
+    const countDisplay = document.getElementById('count');
+    const incLabel = document.getElementById('inc-label');
+    const emptyState = document.getElementById('empty-state');
+    const beerGrid = document.getElementById('beer-grid');
+    const beerArena = document.getElementById('beer-arena');
+    const cheersToast = document.getElementById('cheers-toast');
+
+    const timerPrimaryText = document.getElementById('timer-primary-text');
+    const timerSubText = document.getElementById('timer-sub-text');
+    const timerAdjustBtn = document.getElementById('timer-adjust-btn');
+    const timerModalDesc = document.getElementById('timer-modal-desc');
+    const timerClearBtn = document.getElementById('timer-clear-btn');
+    const customTimeInput = document.getElementById('custom-time-input');
+
+    const drunkCard = document.getElementById('drunk-card');
+    const drunkEmoji = document.getElementById('drunk-emoji');
+    const drunkStatusName = document.getElementById('drunk-status-name');
+    const drunkLevelPill = document.getElementById('drunk-level-pill');
+    const drunkRapidTag = document.getElementById('drunk-rapid-tag');
+    const drunkDesc = document.getElementById('drunk-desc');
+    const gaugeCountLabel = document.getElementById('gauge-count-label');
+
+    let toastTimer = null;
+    function triggerCheersToast(text = '✨ かんぱーい！') {
+      cheersToast.textContent = text;
+      cheersToast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        cheersToast.classList.remove('show');
+      }, 1000);
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY_COUNT, String(count));
+        if (startTime) {
+          localStorage.setItem(STORAGE_KEY_START, String(startTime));
+        } else {
+          localStorage.removeItem(STORAGE_KEY_START);
+        }
+      } catch (e) {}
+    }
+
+    // 酔っ払い度ステータス計算（杯数と経過時間から算出）
+    function updateDrunkStatusDisplay(diffMinutes) {
+      if (count === 0) {
+        drunkEmoji.textContent = '😌';
+        drunkStatusName.textContent = '【素面（シラフ）】';
+        drunkLevelPill.textContent = 'Lv.0/5';
+        drunkLevelPill.style.background = '#e2e8f0';
+        drunkLevelPill.style.color = '#334155';
+        drunkRapidTag.style.display = 'none';
+        drunkDesc.textContent = 'まだ素面です。マイペースに楽しもう！';
+        drunkCard.style.background = '#f8fafc';
+        drunkCard.style.borderColor = '#e2e8f0';
+        gaugeCountLabel.textContent = '素面';
+        for (let i = 1; i <= 5; i++) {
+          const seg = document.getElementById(`seg-${i}`);
+          if (seg) seg.style.background = '#e2e8f0';
+        }
+        return;
+      }
+
+      // 1時間に約0.6杯分のアルコール代謝
+      const elapsedHours = diffMinutes / 60;
+      const metabolized = elapsedHours * 0.6;
+      const effectiveCount = Math.max(0.5, count - metabolized);
+
+      const paceMin = diffMinutes > 0 ? diffMinutes / count : 999;
+      const isRapid = (count >= 2 && paceMin < 15) || (count >= 4 && paceMin < 25);
+
+      let level = 1;
+      let label = 'ほろ酔い';
+      let emoji = '😊';
+      let desc = isRapid ? 'ピッチ早め！ゆっくり会話を楽しんで' : 'ほんのり心地よいほろ酔い期。会話が弾む頃！';
+      let cardBg = '#ecfdf5';
+      let borderCol = '#a7f3d0';
+      let pillBg = '#a7f3d0';
+      let pillColor = '#065f46';
+      let activeGaugeColor = '#10b981';
+
+      if (effectiveCount < 1.4) {
+        level = 1;
+        label = 'ほろ酔い';
+        emoji = '😊';
+        desc = isRapid ? 'ピッチ早め！ゆっくり会話を楽しんで' : 'ほんのり心地よいほろ酔い期。会話が弾む頃！';
+        cardBg = '#ecfdf5';
+        borderCol = '#a7f3d0';
+        pillBg = '#a7f3d0';
+        pillColor = '#065f46';
+        activeGaugeColor = '#10b981';
+      } else if (effectiveCount < 2.8) {
+        level = 2;
+        label = 'いい気分';
+        emoji = '🍻';
+        desc = isRapid ? 'ペース早めです！和らぎ水（お冷）を挟もう' : '程よくお酒が回っています。お水も一杯どうぞ！';
+        cardBg = '#fffbeb';
+        borderCol = '#fde68a';
+        pillBg = '#fde68a';
+        pillColor = '#92400e';
+        activeGaugeColor = '#f59e0b';
+      } else if (effectiveCount < 4.5) {
+        level = 3;
+        label = 'ご機嫌';
+        emoji = '🥴';
+        desc = isRapid ? '⚠️ 急ピッチ注意！おつまみ休憩を挟みましょう' : 'だいぶ酔いを感じる頃。水分補給を忘れずに！';
+        cardBg = '#fff7ed';
+        borderCol = '#fed7aa';
+        pillBg = '#fed7aa';
+        pillColor = '#9a3412';
+        activeGaugeColor = '#f97316';
+      } else if (effectiveCount < 6.5) {
+        level = 4;
+        label = '千鳥足';
+        emoji = '🤪';
+        desc = '足元ふらふら注意！ペースを落として休憩しましょう';
+        cardBg = '#fff1f2';
+        borderCol = '#fecdd3';
+        pillBg = '#fecdd3';
+        pillColor = '#9f1239';
+        activeGaugeColor = '#f43f5e';
+      } else {
+        level = 5;
+        label = 'ベロベロ';
+        emoji = '😵‍💫';
+        desc = 'ベロベロ警戒域！お水をたくさん飲んで深呼吸・休憩！';
+        cardBg = '#fee2e2';
+        borderCol = '#fca5a5';
+        pillBg = '#fca5a5';
+        pillColor = '#7f1d1d';
+        activeGaugeColor = '#dc2626';
+      }
+
+      drunkEmoji.textContent = emoji;
+      drunkStatusName.textContent = `【${label}】`;
+      drunkLevelPill.textContent = `Lv.${level}/5`;
+      drunkLevelPill.style.background = pillBg;
+      drunkLevelPill.style.color = pillColor;
+      drunkRapidTag.style.display = isRapid ? 'inline-block' : 'none';
+      drunkDesc.textContent = desc;
+      drunkCard.style.background = cardBg;
+      drunkCard.style.borderColor = borderCol;
+      gaugeCountLabel.textContent = `${count}杯`;
+
+      for (let i = 1; i <= 5; i++) {
+        const seg = document.getElementById(`seg-${i}`);
+        if (seg) {
+          seg.style.background = i <= level ? activeGaugeColor : '#e2e8f0';
+        }
+      }
+    }
+
+    // 飲酒タイマーのリアルタイム更新（何分前から飲んでいるか）
+    function updateTimerDisplay() {
+      const now = Date.now();
+      if (!startTime) {
+        timerPrimaryText.textContent = '飲み始め未記録（カウントで開始）';
+        timerSubText.textContent = '「+1」カウントで自動スタート';
+        timerAdjustBtn.textContent = '記録';
+        if (timerClearBtn) timerClearBtn.style.display = 'none';
+        if (timerModalDesc) timerModalDesc.textContent = '何分前から飲んでいるかを設定できます';
+        updateDrunkStatusDisplay(0);
+        return;
+      }
+
+      if (timerClearBtn) timerClearBtn.style.display = 'block';
+
+      const diffMs = Math.max(0, now - startTime);
+      const diffSeconds = Math.floor((diffMs % 60000) / 1000);
+      const diffMinutes = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMinutes / 60);
+      const remMinutes = diffMinutes % 60;
+
+      // 酔っ払い度を最新経過時間で更新
+      updateDrunkStatusDisplay(diffMinutes);
+
+      // 何分前から飲んでいるかテキスト
+      let agoText = '';
+      if (diffMinutes === 0) {
+        agoText = `たった今飲み始めました（${diffSeconds}秒前）`;
+      } else if (diffHours === 0) {
+        agoText = `${diffMinutes}分前から飲んでいます`;
+      } else {
+        agoText = `${diffHours}時間${remMinutes}分前から飲んでいます`;
+      }
+
+      timerPrimaryText.textContent = agoText;
+
+      const startObj = new Date(startTime);
+      const startFormatted = startObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const elapsedDuration = diffHours > 0 ? `${diffHours}時間${remMinutes}分` : `${diffMinutes}分`;
+      const pace = (count > 0 && diffMinutes > 0) ? Math.round(diffMinutes / count) : null;
+
+      let subText = `開始: ${startFormatted} • 経過: ${elapsedDuration}`;
+      if (pace !== null) {
+        subText += ` • 約${pace}分/杯`;
+      }
+      timerSubText.textContent = subText;
+      timerAdjustBtn.textContent = '変更';
+
+      if (timerModalDesc) {
+        timerModalDesc.textContent = `現在: ${startFormatted} 開始（${elapsedDuration}経過）`;
+      }
+    }
+
+    setInterval(updateTimerDisplay, 1000);
+
+    function openTimerModal() {
+      updateTimerDisplay();
+      // hh:mm 入力欄に現在の開始時刻（または現在時刻）をセット
+      const d = startTime ? new Date(startTime) : new Date();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      if (customTimeInput) {
+        customTimeInput.value = `${hh}:${mm}`;
+      }
+      document.getElementById('timer-modal').classList.add('open');
+    }
+
+    function closeTimerModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('cancel-btn')) return;
+      document.getElementById('timer-modal').classList.remove('open');
+    }
+
+    // hh:mm 直接指定の適用
+    function applyCustomTimeInput() {
+      if (!customTimeInput || !customTimeInput.value) return;
+      const parts = customTimeInput.value.split(':');
+      if (parts.length !== 2) return;
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+        triggerCheersToast('有効な時刻を入力してください');
+        return;
+      }
+
+      const target = new Date();
+      target.setHours(h, m, 0, 0);
+
+      // 未来時刻（例: 現在01:00で23:30と指定）の場合は前日扱い
+      if (target.getTime() > Date.now()) {
+        target.setDate(target.getDate() - 1);
+      }
+
+      startTime = target.getTime();
+      saveState();
+      updateTimerDisplay();
+      playCheersSound();
+      document.getElementById('timer-modal').classList.remove('open');
+      triggerCheersToast(`${customTimeInput.value} 開始に設定しました⏱️`);
+    }
+
+    function setQuickStartTime(minutesAgo) {
+      startTime = Date.now() - minutesAgo * 60 * 1000;
+      saveState();
+      updateTimerDisplay();
+      playCheersSound();
+      document.getElementById('timer-modal').classList.remove('open');
+      triggerCheersToast(minutesAgo === 0 ? '飲み始めを開始しました⏱️' : `${minutesAgo}分前に開始を設定しました⏱️`);
+    }
+
+    function clearStartTime() {
+      startTime = null;
+      saveState();
+      updateTimerDisplay();
+      document.getElementById('timer-modal').classList.remove('open');
+      triggerCheersToast('タイマーをクリアしました');
+    }
+
+    function setStep(val, btn) {
+      stepValue = val;
+      document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      incLabel.textContent = '+' + stepValue + ' 杯';
+      playPopDownSound();
+    }
+
+    function handleCountIncrement() {
+      if (!startTime) {
+        startTime = Date.now();
+      }
+      count += stepValue;
+      countDisplay.textContent = count;
+      saveState();
+      updateTimerDisplay();
+      renderBeerGrid();
+      playCheersSound();
+      triggerCheersToast(count % 10 === 0 ? '🎉 ' + count + '杯達成！かんぱーい！' : '✨ かんぱーい！ (' + count + '杯目)');
+
+      // 自動で最下部にスクロールして最新のビールを見せる
+      setTimeout(() => {
+        beerArena.scrollTo({
+          top: beerArena.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 50);
+    }
+
+    function handleCountDecrement() {
+      if (count <= 0) return;
+      count = Math.max(0, count - stepValue);
+      countDisplay.textContent = count;
+      saveState();
+      updateTimerDisplay();
+      renderBeerGrid();
+      playPopDownSound();
+    }
+
+    function handleCountReset() {
+      if (count === 0 && !startTime) {
+        triggerCheersToast('すでに0杯です🍺');
+        return;
+      }
+      document.getElementById('reset-modal-count').textContent = count;
+      document.getElementById('reset-modal').classList.add('open');
+    }
+
+    function closeResetModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('cancel-btn')) return;
+      document.getElementById('reset-modal').classList.remove('open');
+    }
+
+    function confirmReset() {
+      count = 0;
+      startTime = null;
+      countDisplay.textContent = count;
+      saveState();
+      updateTimerDisplay();
+      renderBeerGrid();
+      playResetSound();
+      document.getElementById('reset-modal').classList.remove('open');
+      triggerCheersToast('リセットしました（0杯）');
+    }
+
+    // ビールグリッドの描画（カウントに合わせて🍺をひとつづつ増やして並べる）
+    function renderBeerGrid() {
+      if (count === 0) {
+        emptyState.style.display = 'flex';
+        beerGrid.style.display = 'none';
+        beerGrid.innerHTML = '';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      beerGrid.style.display = 'grid';
+
+      const currentItemCount = beerGrid.children.length;
+
+      if (count > currentItemCount) {
+        // 新しく増えた分だけ🍺を追加（アニメーション付き）
+        const fragment = document.createDocumentFragment();
+        for (let i = currentItemCount + 1; i <= count; i++) {
+          const item = createBeerItem(i);
+          fragment.appendChild(item);
+        }
+        beerGrid.appendChild(fragment);
+      } else if (count < currentItemCount) {
+        // 減った分だけ後ろから削除
+        while (beerGrid.children.length > count) {
+          beerGrid.removeChild(beerGrid.lastChild);
+        }
+      }
+    }
+
+    // ビールジョッキ要素の作成
+    function createBeerItem(index) {
+      const el = document.createElement('div');
+      el.className = 'beer-item';
+      el.title = index + '杯目のビール！タップで乾杯';
+
+      const emoji = document.createElement('span');
+      emoji.className = 'beer-emoji';
+      emoji.textContent = '🍺';
+
+      const num = document.createElement('span');
+      num.className = 'beer-number';
+      num.textContent = '#' + index;
+
+      el.appendChild(emoji);
+      el.appendChild(num);
+
+      // ビールを直接タップした時の乾杯リアクション
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playCheersSound();
+        triggerCheersToast('🍺 ' + index + '杯目にかんぱーい！');
+
+        // 泡パーティクル発生
+        createBubbleBurst(el);
+      });
+
+      return el;
+    }
+
+    // 泡のエフェクト演出
+    function createBubbleBurst(targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const arenaRect = beerArena.getBoundingClientRect();
+      const bubbles = ['🫧', '✨', '🍻'];
+      for (let i = 0; i < 3; i++) {
+        const bubble = document.createElement('span');
+        bubble.className = 'bubble-burst';
+        bubble.textContent = bubbles[Math.floor(Math.random() * bubbles.length)];
+        const offsetX = (Math.random() - 0.5) * 30;
+        bubble.style.setProperty('--bx', offsetX + 'px');
+        bubble.style.left = (rect.left - arenaRect.left + rect.width / 2 - 8) + 'px';
+        bubble.style.top = (rect.top - arenaRect.top + beerArena.scrollTop) + 'px';
+        beerArena.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 600);
+      }
+    }
+
+    // アリーナの余白タップでもカウントアップ
+    function handleArenaClick(e) {
+      if (e.target === beerArena || e.target === emptyState || e.target.closest('#empty-state')) {
+        handleCountIncrement();
+      }
+    }
+
+    // 初期化実行
+    window.onload = () => {
+      countDisplay.textContent = count;
+      renderBeerGrid();
+      updateTimerDisplay();
+    };
+
+    // ダブルタップ（連打）によるズームの防止
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 350) {
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+          e.preventDefault();
+        }
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    document.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+    });
+  </script>
+</body>
+</html>
