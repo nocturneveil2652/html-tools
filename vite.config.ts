@@ -64,9 +64,47 @@ function aistudioMediaPlugin(): Plugin {
 }
 // LINT.ThenChange(//depot/google3/java/com/google/alkali/boq/makersuite/applet_dev_service/templates/initializers/react_theme/vite.config.ts:aistudio_media_plugin)
 
+function multipageRoutingPlugin(): Plugin {
+  return {
+    name: 'vite-plugin-multipage-routing',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url) return next();
+        const [pathname, search = ''] = req.url.split('?');
+        const query = search ? `?${search}` : '';
+
+        // 旧URL /counter-chinchiro へのアクセスを /beer-counter/ へリダイレクト
+        if (pathname === '/counter-chinchiro' || pathname === '/counter-chinchiro/' || pathname.startsWith('/counter-chinchiro/')) {
+          const suffix = pathname.replace(/^\/counter-chinchiro\/?/, '');
+          const dest = suffix ? `/beer-counter/${suffix}${query}` : `/beer-counter/${query}`;
+          res.writeHead(302, { Location: dest });
+          res.end();
+          return;
+        }
+
+        // 末尾スラッシュなしの /beer-counter を /beer-counter/ へ補正
+        if (pathname === '/beer-counter') {
+          res.writeHead(302, { Location: `/beer-counter/${query}` });
+          res.end();
+          return;
+        }
+
+        // 末尾スラッシュなしの /station-timer を /station-timer/ へ補正
+        if (pathname === '/station-timer') {
+          res.writeHead(302, { Location: `/station-timer/${query}` });
+          res.end();
+          return;
+        }
+
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), aistudioMediaPlugin()],
+    plugins: [react(), tailwindcss(), aistudioMediaPlugin(), multipageRoutingPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -84,6 +122,7 @@ export default defineConfig(() => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
           beerCounter: path.resolve(__dirname, 'beer-counter/index.html'),
+          counterChinchiro: path.resolve(__dirname, 'counter-chinchiro/index.html'),
           stationTimer: path.resolve(__dirname, 'station-timer/index.html'),
         },
       },
