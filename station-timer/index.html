@@ -1,1 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホワサバ ステーション管理ツール</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; padding: 15px; max-width: 600px; margin: auto; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .top-btn { display: inline-flex; align-items: center; gap: 4px; background: #1e293b; color: #94a3b8; text-decoration: none; font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 6px; border: 1px solid #334155; transition: all 0.2s; }
+        .top-btn:hover { background: #334155; color: #f1f5f9; }
+        .clock-card { background: #1a237e; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; font-weight: bold; border: 1px solid #3f51b5; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+        .clock-card span[id$="Clock"] { font-variant-numeric: tabular-nums; display: inline-block; min-width: 70px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
+        h2 { color: #90caf9; margin-top: 0; font-size: 16px; border-bottom: 1px solid #444; padding-bottom: 6px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 13px; }
+        
+        .input-container { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+        .time-input-box { text-align: center; }
+        .time-input-box input { width: 100%; padding: 10px 0; background: #2c2c2c; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 18px; text-align: center; box-sizing: border-box; }
+        .time-input-box span { font-size: 11px; color: #aaa; display: block; margin-top: 2px; }
+        .colon { font-size: 18px; font-weight: bold; color: #757575; padding-bottom: 15px; }
 
+        select { width: 100%; padding: 8px; background: #2c2c2c; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 13px; margin-bottom: 12px; }
+        button { background: #1976d2; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px; transition: background 0.15s, transform 0.1s; user-select: none; }
+        button:hover { background: #1565c0; }
+        button:active { background: #0d47a1; transform: scale(0.98); }
+        .result-box { margin-top: 12px; font-size: 13px; background: #262626; padding: 12px; border-radius: 6px; line-height: 1.6; }
+        .highlight { color: #ffb74d; font-weight: bold; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+        .station-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="../" class="top-btn">← TOP</a>
+        <h1 style="font-size: 17px; text-align: center; color: #fff; margin: 0; flex: 1; padding-right: 50px;">ホワサバ ステーション管理</h1>
+    </div>
+
+    <!-- 現在時刻表示 -->
+    <div class="clock-card">
+        <div><span>JST: </span><span id="jstClock">--:--:--</span></div>
+        <div><span>UTC: </span><span id="utcClock">--:--:--</span></div>
+    </div>
+
+    <div class="station-grid">
+        <!-- 攻撃ステーション -->
+        <div class="card">
+            <h2>⚔️ 攻撃ステーション</h2>
+            <label>残り時間入力 (d / hh / mm)</label>
+            <div class="input-container">
+                <div class="time-input-box" style="flex: 1;">
+                    <input type="number" id="atkD" min="0" max="2" value="0" inputmode="numeric">
+                    <span>d (0-2)</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-input-box" style="flex: 1.2;">
+                    <input type="number" id="atkH" min="0" max="23" value="0" inputmode="numeric">
+                    <span>hh (0-23)</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-input-box" style="flex: 1.2;">
+                    <input type="number" id="atkM" min="0" max="59" value="0" inputmode="numeric">
+                    <span>mm (0-59)</span>
+                </div>
+            </div>
+            <select id="atkBase">
+                <option value="prot">現在の状態：保護中（残り時間）</option>
+                <option value="battle">現在の状態：争奪中（残り時間）</option>
+            </select>
+            <button type="button" id="atkBtn" onclick="calculate('atk')">攻撃ステーションを計算</button>
+            <div id="atkResult" class="result-box" style="display:none;"></div>
+        </div>
+
+        <!-- 防御ステーション -->
+        <div class="card">
+            <h2>🛡️ 防御ステーション</h2>
+            <label>残り時間入力 (d / hh / mm)</label>
+            <div class="input-container">
+                <div class="time-input-box" style="flex: 1;">
+                    <input type="number" id="defD" min="0" max="2" value="0" inputmode="numeric">
+                    <span>d (0-2)</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-input-box" style="flex: 1.2;">
+                    <input type="number" id="defH" min="0" max="23" value="0" inputmode="numeric">
+                    <span>hh (0-23)</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-input-box" style="flex: 1.2;">
+                    <input type="number" id="defM" min="0" max="59" value="0" inputmode="numeric">
+                    <span>mm (0-59)</span>
+                </div>
+            </div>
+            <select id="defBase">
+                <option value="prot">現在の状態：保護中（残り時間）</option>
+                <option value="battle">現在の状態：争奪中（残り時間）</option>
+            </select>
+            <button type="button" id="defBtn" onclick="calculate('def')">防御ステーションを計算</button>
+            <div id="defResult" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 時計のライブ更新
+        function updateClocks() {
+            const now = new Date();
+            document.getElementById('jstClock').innerText = now.toLocaleTimeString('ja-JP', { timeZone: 'Asia/Tokyo' });
+            document.getElementById('utcClock').innerText = now.toLocaleTimeString('en-GB', { timeZone: 'UTC' }) + ' UTC';
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // 範囲制限付きの値取得
+        function getValidatedVal(id, min, max) {
+            const el = document.getElementById(id);
+            let val = parseInt(el.value, 10);
+            if (isNaN(val)) val = 0;
+            if (val > max) { val = max; el.value = max; }
+            if (val < min) { val = min; el.value = min; }
+            return val;
+        }
+
+        // 日時フォーマット (JST / UTC併記用)
+        function formatBothTime(date) {
+            const days = ['日', '月', '火', '水', '木', '金', '土'];
+            
+            // JST (UTC+9)
+            const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+            const jstM = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
+            const jstD = String(jstDate.getUTCDate()).padStart(2, '0');
+            const jstDay = days[jstDate.getUTCDay()];
+            const jstH = String(jstDate.getUTCHours()).padStart(2, '0');
+            const jstMin = String(jstDate.getUTCMinutes()).padStart(2, '0');
+            const jstStr = `${jstM}/${jstD}(${jstDay}) ${jstH}:${jstMin} JST`;
+
+            // UTC
+            const utcM = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const utcD = String(date.getUTCDate()).padStart(2, '0');
+            const utcDay = days[date.getUTCDay()];
+            const utcH = String(date.getUTCHours()).padStart(2, '0');
+            const utcMin = String(date.getUTCMinutes()).padStart(2, '0');
+            const utcStr = `${utcM}/${utcD}(${utcDay}) ${utcH}:${utcMin} UTC`;
+
+            return `<span class="highlight">${jstStr}</span> <span style="color:#aaa; font-size:11px;">( ${utcStr} )</span>`;
+        }
+
+        function calculate(type) {
+            const d = getValidatedVal(type + 'D', 0, 2);
+            const h = getValidatedVal(type + 'H', 0, 23);
+            const m = getValidatedVal(type + 'M', 0, 59);
+            const baseState = document.getElementById(type + 'Base').value;
+            const resultBox = document.getElementById(type + 'Result');
+
+            const ms = (d * 24 * 60 + h * 60 + m) * 60 * 1000;
+            const now = new Date();
+            let protEnd, battleEnd, nextProtEnd, nextBattleEnd;
+
+            if (baseState === 'prot') {
+                protEnd = new Date(now.getTime() + ms);
+                battleEnd = new Date(protEnd.getTime() + 24 * 60 * 60 * 1000);
+                nextProtEnd = new Date(battleEnd.getTime() + 72 * 60 * 60 * 1000);
+                nextBattleEnd = new Date(nextProtEnd.getTime() + 24 * 60 * 60 * 1000);
+            } else {
+                battleEnd = new Date(now.getTime() + ms);
+                protEnd = new Date(battleEnd.getTime() - 24 * 60 * 60 * 1000);
+                nextProtEnd = new Date(battleEnd.getTime() + 72 * 60 * 60 * 1000);
+                nextBattleEnd = new Date(nextProtEnd.getTime() + 24 * 60 * 60 * 1000);
+            }
+
+            let html = `📅 <strong>解析結果 (JST / UTC):</strong><br>`;
+            if (baseState === 'prot') {
+                html += `• 保護切れ（争奪開始）:<br>&nbsp;&nbsp;${formatBothTime(protEnd)}<br>`;
+                html += `• 争奪タイムリミット:<br>&nbsp;&nbsp;${formatBothTime(battleEnd)} まで<br>`;
+                html += `• 最短での次回の保護切れ:<br>&nbsp;&nbsp;${formatBothTime(nextBattleEnd)}`;
+            } else {
+                html += `• 現在の争奪終了（保護突入）:<br>&nbsp;&nbsp;${formatBothTime(battleEnd)}<br>`;
+                html += `• 次回の保護切れ（再・争奪開始）:<br>&nbsp;&nbsp;${formatBothTime(nextProtEnd)}<br>`;
+                html += `• その次の保護切れ:<br>&nbsp;&nbsp;${formatBothTime(nextBattleEnd)}`;
+            }
+
+            const jstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+            const nowH = String(jstNow.getUTCHours()).padStart(2, '0');
+            const nowM = String(jstNow.getUTCMinutes()).padStart(2, '0');
+            const nowS = String(jstNow.getUTCSeconds()).padStart(2, '0');
+            html += `<div style="margin-top: 8px; font-size: 11px; color: #81c784; text-align: right; border-top: 1px dashed #444; padding-top: 6px;">✓ 計算完了 (${nowH}:${nowM}:${nowS} JST基準)</div>`;
+
+            resultBox.innerHTML = html;
+            resultBox.style.display = 'block';
+        }
+
+        // グローバルに公開（HTMLのonclickからも確実に呼べるようにする）
+        window.calculate = calculate;
+
+        // イベントリスナーの登録
+        const atkBtn = document.getElementById('atkBtn');
+        if (atkBtn) atkBtn.addEventListener('click', function() { calculate('atk'); });
+        const defBtn = document.getElementById('defBtn');
+        if (defBtn) defBtn.addEventListener('click', function() { calculate('def'); });
+
+        // 入力欄やセレクトボックスを変更した時にも自動で再計算が走るようにする
+        ['atkD', 'atkH', 'atkM', 'atkBase'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() { calculate('atk'); });
+                el.addEventListener('change', function() { calculate('atk'); });
+            }
+        });
+        ['defD', 'defH', 'defM', 'defBase'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() { calculate('def'); });
+                el.addEventListener('change', function() { calculate('def'); });
+            }
+        });
+
+        // 初回ロード時にも計算を実行
+        calculate('atk');
+        calculate('def');
+    </script>
+</body>
+</html>
