@@ -2,13 +2,22 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>DevTools Portal</title>
   <meta name="description" content="個人開発したHTML/JSベースのWebツール集ポータル">
   <meta property="og:title" content="DevTools Portal">
   <meta property="og:description" content="個人開発したHTML/JSベースのWebツール集ポータル">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      touch-action: manipulation;
+    }
+    html, body {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+    }
+  </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col selection:bg-indigo-500 selection:text-white">
 
@@ -43,11 +52,11 @@
     <main>
       <div class="grid md:grid-cols-2 gap-6">
 
-        <!-- ツール1: カウンター＆チンチロリン -->
-        <a href="./counter-chinchiro/" class="group relative block p-6 bg-slate-900/60 hover:bg-slate-900/90 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1">
+        <!-- ツール1: ビールカウンター -->
+        <a href="./counter-chinchiro/" class="group relative block p-6 bg-slate-900/60 hover:bg-slate-900/90 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1">
           <div class="flex items-start justify-between mb-4">
-            <div class="p-3 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-              <i class="fa-solid fa-dice text-xl"></i>
+            <div class="p-3 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-xl group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors duration-300 text-xl flex items-center justify-center">
+              🍺
             </div>
             <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -55,13 +64,13 @@
             </span>
           </div>
 
-          <h2 class="text-lg font-bold text-slate-100 group-hover:text-indigo-400 transition-colors mb-2 flex items-center justify-between">
-            カウンター＆チンチロリン
-            <i class="fa-solid fa-arrow-right text-xs opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-indigo-400"></i>
+          <h2 class="text-lg font-bold text-slate-100 group-hover:text-amber-400 transition-colors mb-2 flex items-center justify-between">
+            🍺 ビールカウンター
+            <i class="fa-solid fa-arrow-right text-xs opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-amber-400"></i>
           </h2>
 
           <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            シンプルなカウンター機能と、サイコロ3つの役判定ができる切り替え対応アプリ。
+            カウントアップに合わせて🍺がひとつづつ増えてずらりと並ぶ、杯数記録に最適なカウンターアプリ。
           </p>
 
           <div class="flex items-center gap-2 pt-2 border-t border-slate-800/50">
@@ -76,5 +85,22 @@
     </main>
   </div>
 
+  <script>
+    // ダブルタップ（連打）によるズームの防止
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 350) {
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+          e.preventDefault();
+        }
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    document.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+    });
+  </script>
 </body>
 </html>

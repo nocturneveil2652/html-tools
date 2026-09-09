@@ -2,24 +2,23 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>カウンター ＆ チンチロリン</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🍺 ビールカウンター</title>
+  <meta name="description" content="カウントアップに合わせてビールが並ぶ、飲酒・杯数記録カウンターアプリ">
   <style>
     :root {
-      --bg: #f5f5f7;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #1d1d1f;
-      --text-sub: #86868b;
-      --primary: #007aff;
-      --primary-active: #005ecb;
-      --indigo: #4f46e5;
-      --indigo-active: #4338ca;
-      --amber: #f59e0b;
-      --rose: #e11d48;
-      --emerald: #10b981;
-      --gray-btn: #8e8e93;
-      --gray-btn-active: #6e6e73;
-      --border: #e5e5ea;
+      --text: #0f172a;
+      --text-sub: #64748b;
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-200: #fde68a;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+      --border: #e2e8f0;
+      --border-amber: #fcd34d;
     }
 
     * {
@@ -28,6 +27,12 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -42,10 +47,10 @@
       flex-direction: column;
     }
 
-    /* 最上部タブバー */
+    /* 最上部ヘッダー */
     header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 10px 16px;
       display: flex;
@@ -55,47 +60,51 @@
       z-index: 50;
     }
 
-    .tab-bar-container {
-      max-width: 480px;
+    .header-container {
+      max-width: 520px;
       width: 100%;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
 
-    .tab-group {
-      flex: 1;
-      display: flex;
-      background: #e9e9eb;
-      padding: 3px;
+    .top-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #f1f5f9;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 12px;
       border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      height: 38px;
     }
 
-    .tab-btn {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px 12px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 10px;
-      cursor: pointer;
-      color: var(--text-sub);
-      transition: all 0.15s ease;
+    .top-nav-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .title-badge {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .tab-btn.active {
-      background: #fff;
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #92400e;
+      background: var(--amber-100);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--amber-200);
     }
 
     .sound-toggle-btn {
-      background: #e9e9eb;
+      background: #f1f5f9;
       border: 1px solid var(--border);
       border-radius: 12px;
       width: 38px;
@@ -105,369 +114,341 @@
       justify-content: center;
       cursor: pointer;
       font-size: 16px;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+
+    .sound-toggle-btn:hover {
+      background: #e2e8f0;
     }
 
     /* メインコンテナ */
     main {
       flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .view-panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .view-panel.active {
       display: flex;
+      flex-direction: column;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
     }
 
-    /* ========================================================
-       カウンター画面
-       ======================================================== */
-    .counter-top-bar {
+    /* 上部ステップ切り替えバー */
+    .control-top-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 10px 16px 6px;
       font-size: 12px;
       color: var(--text-sub);
+      flex-shrink: 0;
     }
 
     .step-selector {
       display: flex;
       align-items: center;
-      background: #e5e5ea;
+      background: #e2e8f0;
       padding: 3px;
-      border-radius: 8px;
-      gap: 4px;
+      border-radius: 10px;
+      gap: 2px;
+    }
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      padding: 0 6px 0 8px;
     }
 
     .step-btn {
       border: none;
       background: transparent;
-      padding: 3px 8px;
+      padding: 4px 10px;
       font-size: 12px;
       font-weight: 700;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      color: #636366;
+      color: #475569;
+      transition: all 0.15s ease;
     }
 
     .step-btn.active {
-      background: #fff;
-      color: var(--primary);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+      color: var(--amber-700);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
-    #count {
-      flex: 1;
+    .hint-text {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* カウント数表示エリア */
+    .count-display-section {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: min(28vw, 180px);
-      font-weight: 700;
-      color: #1d1d1f;
+      padding: 8px 16px 4px;
       cursor: pointer;
+      flex-shrink: 0;
       transition: transform 0.05s ease;
     }
 
-    #count:active {
-      transform: scale(0.96);
+    .count-display-section:active {
+      transform: scale(0.97);
     }
 
+    .count-number-wrapper {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    #count {
+      font-size: min(18vw, 84px);
+      font-weight: 900;
+      line-height: 1;
+      color: #78350f;
+      letter-spacing: -0.04em;
+      text-shadow: 0 2px 4px rgba(217, 119, 6, 0.15);
+    }
+
+    .count-unit {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--amber-600);
+    }
+
+    .cheers-toast {
+      font-size: 12px;
+      color: #b45309;
+      font-weight: 700;
+      background: #fef3c7;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-top: 2px;
+      border: 1px solid #fde68a;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+
+    .cheers-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 🍺 ビールが並ぶアリーナ（グリッドエリア） */
+    .beer-arena {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      margin: 6px 12px 12px;
+      background: radial-gradient(circle at 50% 10%, #fffdfa 0%, #fffbeb 100%);
+      border: 2px dashed #fcd34d;
+      border-radius: 20px;
+      box-shadow: inset 0 2px 8px rgba(245, 158, 11, 0.05);
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 空ステート */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #94a3b8;
+      padding: 24px 16px;
+      gap: 12px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: 0.7;
+      animation: floatBeer 2.4s ease-in-out infinite;
+    }
+
+    @keyframes floatBeer {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+    }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #78350f;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* ビールが並ぶグリッド */
+    .beer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+      gap: 10px;
+      width: 100%;
+      align-content: start;
+    }
+
+    /* ビールジョッキ 1つ */
+    .beer-item {
+      position: relative;
+      background: #ffffff;
+      border: 1.5px solid #fef08a;
+      border-radius: 14px;
+      padding: 8px 4px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08);
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: popInBeer 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popInBeer {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(16px) rotate(-10deg);
+      }
+      70% {
+        opacity: 1;
+        transform: scale(1.15) translateY(-2px) rotate(3deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+      }
+    }
+
+    .beer-item:active {
+      transform: scale(0.9) rotate(-6deg);
+    }
+
+    .beer-emoji {
+      font-size: 32px;
+      line-height: 1.1;
+      filter: drop-shadow(0 2px 3px rgba(180, 83, 9, 0.2));
+      transition: transform 0.15s ease;
+    }
+
+    .beer-item:hover .beer-emoji {
+      transform: scale(1.12);
+    }
+
+    .beer-number {
+      font-size: 10px;
+      font-weight: 800;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-top: 4px;
+      border: 1px solid #fde68a;
+      letter-spacing: -0.02em;
+    }
+
+    /* 泡エフェクト演出 */
+    .bubble-burst {
+      position: absolute;
+      pointer-events: none;
+      font-size: 14px;
+      animation: floatUpFade 0.6s forwards ease-out;
+    }
+
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.6); }
+      100% { opacity: 0; transform: translate(var(--bx, 0px), -36px) scale(1.2); }
+    }
+
+    /* 下部のボタングループ */
     .counter-buttons {
       display: flex;
       width: 100%;
       flex-shrink: 0;
       border-top: 1px solid var(--border);
+      background: #ffffff;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .counter-buttons button {
       border: none;
-      font-size: 24px;
-      font-weight: 600;
-      padding: 26px 0;
-      cursor: pointer;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    #decrement {
-      background: #d1d1d6;
-      color: #48484a;
-      flex: 0 0 75px;
-      font-size: 22px;
-    }
-    #decrement:active { background: #b8b8bd; }
-
-    #increment {
-      background: var(--primary);
-      flex: 1;
-      font-size: 28px;
-    }
-    #increment:active { background: var(--primary-active); }
-
-    #reset {
-      background: var(--gray-btn);
-      flex: 0 0 110px;
-      font-size: 18px;
-    }
-    #reset:active { background: var(--gray-btn-active); }
-
-    /* ========================================================
-       チンチロリン画面
-       ======================================================== */
-    .chinchiro-mode-bar {
-      display: flex;
-      background: #e5e5ea;
-      padding: 3px;
-      border-radius: 10px;
-      margin: 8px 16px 4px;
-      max-width: 480px;
-      width: calc(100% - 32px);
-      align-self: center;
-    }
-
-    .chinchiro-sub-tab {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #636366;
-      transition: all 0.15s ease;
-    }
-
-    .chinchiro-sub-tab.active {
-      background: #fff;
-      color: var(--indigo);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-
-    .chinchiro-content {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      max-width: 480px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 8px 16px 0;
-    }
-
-    /* ダイスコンテナ */
-    .dice-container {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      padding: 20px 16px;
-      background: rgba(255, 255, 255, 0.75);
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      margin-bottom: 12px;
-    }
-
-    .dice {
-      width: 74px;
-      height: 74px;
-      background: #fff;
-      border: 1px solid #d1d1d6;
-      border-radius: 18px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.1s ease;
-    }
-
-    .dice.rolling {
-      animation: diceRoll 0.6s infinite ease-in-out;
-    }
-
-    @keyframes diceRoll {
-      0% { transform: rotate(0deg) translateY(0); }
-      25% { transform: rotate(-16deg) translateY(-12px); }
-      50% { transform: rotate(20deg) translateY(3px); }
-      75% { transform: rotate(-10deg) translateY(-8px); }
-      100% { transform: rotate(0deg) translateY(0); }
-    }
-
-    /* サイコロのドット配置 */
-    .dice-dots {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      padding: 10px;
-    }
-
-    .dot {
-      width: 12px;
-      height: 12px;
-      background: #1d1d1f;
-      border-radius: 50%;
-      position: absolute;
-    }
-
-    .dot-red {
-      width: 24px;
-      height: 24px;
-      background: #dc2626;
-      border-radius: 50%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    /* 役結果カード */
-    .yaku-card {
-      background: #fff;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      padding: 16px;
-      text-align: center;
-      margin-bottom: 12px;
-      min-height: 105px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .badge-pinzoro { background: var(--amber); }
-    .badge-zorome  { background: var(--indigo); }
-    .badge-shigoro { background: var(--emerald); }
-    .badge-normal  { background: var(--primary); }
-    .badge-menashi { background: #8e8e93; }
-    .badge-hifumi  { background: var(--rose); }
-
-    .yaku-desc {
-      font-size: 13px;
-      font-weight: 600;
-      color: #48484a;
-    }
-
-    .dice-digits {
-      font-size: 11px;
-      font-family: monospace;
-      color: #8e8e93;
-      background: #f2f2f7;
-      padding: 2px 8px;
-      border-radius: 12px;
-    }
-
-    /* 対戦ゲーム用カード */
-    .game-section {
-      background: #fff;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-
-    .status-banner {
-      background: #fdf2f8;
-      border: 1px solid #fbcfe8;
-      color: #9d174d;
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .parent-banner {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      color: #92400e;
-    }
-
-    .btn-action {
-      width: 100%;
-      border: none;
-      background: var(--indigo);
-      color: #fff;
       font-size: 20px;
       font-weight: 700;
       padding: 22px 0;
-      border-radius: 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
+      transition: all 0.1s ease;
     }
 
-    .btn-action:active {
-      background: var(--indigo-active);
+    #decrement {
+      background: #f1f5f9;
+      color: #64748b;
+      flex: 0 0 80px;
+      font-size: 24px;
+      border-right: 1px solid var(--border);
     }
 
-    .btn-action:disabled {
-      background: #a5b4fc;
-      cursor: not-allowed;
+    #decrement:active {
+      background: #e2e8f0;
+      color: #0f172a;
     }
 
-    .btn-pass {
-      background: #fff;
-      border: 1px solid #d97706;
-      color: #b45309;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 8px;
-      cursor: pointer;
+    #increment {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      flex: 1;
+      font-size: 24px;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      text-shadow: 0 1px 2px rgba(180, 83, 9, 0.4);
     }
 
-    .btn-pass:hover { background: #fef3c7; }
+    #increment:active {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      transform: scale(0.99);
+    }
 
-    /* モーダル */
+    #reset {
+      background: #f1f5f9;
+      color: #64748b;
+      flex: 0 0 90px;
+      font-size: 14px;
+      border-left: 1px solid var(--border);
+    }
+
+    #reset:active {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    /* リセット確認モーダル */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.45);
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(4px);
-      z-index: 100;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      z-index: 100;
+      padding: 16px;
     }
 
     .modal-overlay.open {
@@ -475,70 +456,88 @@
     }
 
     .modal-card {
-      background: #fff;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 320px;
       width: 100%;
-      max-width: 440px;
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-      margin-bottom: 12px;
-    }
-
-    .modal-header h3 {
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      font-size: 20px;
-      color: var(--text-sub);
-      cursor: pointer;
-    }
-
-    .rule-list {
-      overflow-y: auto;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .rule-item {
-      padding: 8px 12px;
-      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+      text-align: center;
       border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      animation: popInModal 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popInModal {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
       font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .cancel-btn {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .cancel-btn:active {
+      background: #e2e8f0;
+    }
+
+    .confirm-btn {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
+    }
+
+    .confirm-btn:active {
+      background: #dc2626;
     }
   </style>
 </head>
 <body>
 
-  <!-- 最上部タブバー -->
+  <!-- 最上部ヘッダー -->
   <header>
-    <div class="tab-bar-container">
-      <div class="tab-group">
-        <button id="tab-counter-btn" class="tab-btn active" onclick="switchMainTab('counter')">
-          <span>🔢 カウンター</span>
-        </button>
-        <button id="tab-chinchiro-btn" class="tab-btn" onclick="switchMainTab('chinchiro')">
-          <span>🎲 チンチロリン</span>
-        </button>
+    <div class="header-container">
+      <a href="../" class="top-nav-btn" title="TOPポータルに戻る">
+        <span>← TOP</span>
+      </a>
+      <div class="title-badge">
+        <span>🍺</span>
+        <span>ビールカウンター</span>
       </div>
       <button id="sound-btn" class="sound-toggle-btn" onclick="toggleSound()" title="効果音切り替え">
         🔊
@@ -546,198 +545,76 @@
     </div>
   </header>
 
+  <!-- メインエリア -->
   <main>
-    <!-- ==========================================
-         1. カウンター画面
-         ========================================== -->
-    <div id="view-counter" class="view-panel active">
-      <div class="counter-top-bar">
-        <div class="step-selector">
-          <span style="padding-left: 6px;">加算:</span>
-          <button class="step-btn active" onclick="setStep(1, this)">+1</button>
-          <button class="step-btn" onclick="setStep(5, this)">+5</button>
-          <button class="step-btn" onclick="setStep(10, this)">+10</button>
-        </div>
-        <span>画面タップで加算</span>
+    <!-- 上部ステップ切替バー -->
+    <div class="control-top-bar">
+      <div class="step-selector">
+        <span class="step-label">加算:</span>
+        <button id="step-1" class="step-btn active" onclick="setStep(1, this)">+1</button>
+        <button id="step-5" class="step-btn" onclick="setStep(5, this)">+5</button>
+        <button id="step-10" class="step-btn" onclick="setStep(10, this)">+10</button>
       </div>
-
-      <div id="count" onclick="handleCountIncrement()">0</div>
-
-      <div class="counter-buttons">
-        <button id="decrement" onclick="handleCountDecrement()">−</button>
-        <button id="increment" onclick="handleCountIncrement()">+1</button>
-        <button id="reset" onclick="handleCountReset()">リセット</button>
-      </div>
+      <span class="hint-text">タップでもカウント🍺</span>
     </div>
 
-    <!-- ==========================================
-         2. チンチロリン画面
-         ========================================== -->
-    <div id="view-chinchiro" class="view-panel">
-      <!-- チンチロリン内のサブタブ -->
-      <div class="chinchiro-mode-bar">
-        <button id="subtab-game" class="chinchiro-sub-tab active" onclick="switchChinchiroSubTab('game')">
-          対戦ゲーム（手順ルール）
-        </button>
-        <button id="subtab-free" class="chinchiro-sub-tab" onclick="switchChinchiroSubTab('free')">
-          フリー練習（自由ロール）
-        </button>
+    <!-- カウント数表示（タップでカウントアップ） -->
+    <div class="count-display-section" onclick="handleCountIncrement()">
+      <div class="count-number-wrapper">
+        <span id="count">0</span>
+        <span class="count-unit">杯</span>
       </div>
+      <div id="cheers-toast" class="cheers-toast">✨ かんぱーい！</div>
+    </div>
 
-      <!-- A. 対戦ゲームモード -->
-      <div id="chinchiro-game-mode" class="chinchiro-content" style="display: flex;">
-        <div style="flex: 1; overflow-y: auto;">
-          <!-- 現在のステータス情報 -->
-          <div id="game-status-banner" class="status-banner parent-banner">
-            <div>
-              <span id="game-parent-label">👑 親: あなた (P1)</span>
-              <div id="game-round-indicator" style="font-size: 11px; opacity: 0.8;">周回 1/3</div>
-            </div>
-            <button id="game-pass-parent-btn" class="btn-pass" onclick="gamePassParent()">親をパス</button>
-          </div>
-
-          <!-- 親と子の役情報 -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 8px; text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: #92400e;">👑 親の役</div>
-              <div id="game-parent-yaku-display" style="font-size: 13px; font-weight: 700; margin-top: 2px;">未確定</div>
-              <div id="game-parent-dice-display" style="font-size: 10px; color: #8e8e93; font-family: monospace;">---</div>
-            </div>
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 8px; text-align: center;">
-              <div id="game-child-title" style="font-size: 11px; font-weight: 700; color: #1e40af;">👤 今回の子</div>
-              <div id="game-child-yaku-display" style="font-size: 13px; font-weight: 700; margin-top: 2px;">親の役待ち</div>
-              <div id="game-child-dice-display" style="font-size: 10px; color: #8e8e93; font-family: monospace;">---</div>
-            </div>
-          </div>
-
-          <!-- ダイス描画 -->
-          <div class="dice-container">
-            <div id="game-dice-1" class="dice"><div class="dice-dots"></div></div>
-            <div id="game-dice-2" class="dice"><div class="dice-dots"></div></div>
-            <div id="game-dice-3" class="dice"><div class="dice-dots"></div></div>
-          </div>
-
-          <!-- メッセージ案内 -->
-          <div class="yaku-card" style="min-height: 80px;">
-            <div id="game-message" class="yaku-desc" style="font-size: 14px; color: #1d1d1f;">
-              ゲーム準備中
-            </div>
-          </div>
-
-          <!-- 参加者チップ状況 -->
-          <div class="game-section" style="padding: 10px 14px;">
-            <div style="font-size: 12px; font-weight: 700; color: #636366; margin-bottom: 6px; display: flex; justify-content: space-between;">
-              <span>参加者の所持チップ</span>
-              <button onclick="openRulesModal()" style="border:none; background:none; color:var(--indigo); font-size:11px; font-weight:700; cursor:pointer;">役一覧</button>
-            </div>
-            <div id="game-player-chips-list" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 11px;">
-              <!-- JSで生成 -->
-            </div>
-          </div>
-        </div>
-
-        <!-- 下部アクションボタン -->
-        <div style="border-top: 1px solid var(--border);">
-          <button id="game-action-btn" class="btn-action" onclick="handleGameAction()">
-            サイコロを振る
-          </button>
+    <!-- 🍺 ビールが並ぶアリーナ -->
+    <div class="beer-arena" id="beer-arena" onclick="handleArenaClick(event)">
+      <!-- 空ステート（カウント0の時） -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">🍺</div>
+        <div class="empty-title">まだビールはありません</div>
+        <div class="empty-desc">
+          「+1」ボタンや画面をタップして<br>飲んだ杯数をカウントしましょう！
         </div>
       </div>
 
-      <!-- B. フリー練習モード -->
-      <div id="chinchiro-free-mode" class="chinchiro-content" style="display: none;">
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-          <!-- 役一覧ボタン -->
-          <div style="text-align: right; margin-bottom: 8px;">
-            <button onclick="openRulesModal()" style="border:none; background:#e5e5ea; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; color:#48484a; cursor:pointer;">
-              📖 役一覧を見る
-            </button>
-          </div>
+      <!-- ビールグリッド（カウント1以上の時） -->
+      <div id="beer-grid" class="beer-grid" style="display: none;"></div>
+    </div>
 
-          <!-- ダイス描画 -->
-          <div class="dice-container">
-            <div id="free-dice-1" class="dice"><div class="dice-dots"></div></div>
-            <div id="free-dice-2" class="dice"><div class="dice-dots"></div></div>
-            <div id="free-dice-3" class="dice"><div class="dice-dots"></div></div>
-          </div>
-
-          <!-- 役判定結果 -->
-          <div class="yaku-card">
-            <div id="free-badge" class="badge badge-shigoro">シション（4-5-6）</div>
-            <div id="free-desc" class="yaku-desc">縁起の良い上がり目！勝ち役（2倍払い）</div>
-            <div id="free-digits" class="dice-digits">出目: 4・5・6</div>
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid var(--border);">
-          <button id="free-roll-btn" class="btn-action" onclick="handleFreeRoll()">
-            サイコロを振る
-          </button>
-        </div>
-      </div>
+    <!-- 下部操作ボタン -->
+    <div class="counter-buttons">
+      <button id="decrement" onclick="handleCountDecrement()" title="減らす">
+        <span>−</span>
+      </button>
+      <button id="increment" onclick="handleCountIncrement()" title="増やす">
+        <span>🍺</span>
+        <span id="inc-label">+1 杯</span>
+      </button>
+      <button id="reset" onclick="handleCountReset()" title="0に戻す">
+        <span>リセット</span>
+      </button>
     </div>
   </main>
 
-  <!-- 役一覧モーダル -->
-  <div id="rules-modal" class="modal-overlay" onclick="closeRulesModal()">
+  <!-- リセット確認モーダル -->
+  <div id="reset-modal" class="modal-overlay" onclick="closeResetModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3>チンチロリン役一覧</h3>
-        <button class="modal-close" onclick="closeRulesModal()">✕</button>
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">カウントのリセット</div>
+      <p class="modal-desc">
+        これまでの記録（<span id="reset-modal-count" style="font-weight: 800; color: #b45309;">0</span>杯）を0に戻しますか？
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn cancel-btn" onclick="closeResetModal()">キャンセル</button>
+        <button type="button" id="confirm-reset-btn" class="modal-btn confirm-btn" onclick="confirmReset()">リセットする</button>
       </div>
-      <div class="rule-list">
-        <div class="rule-item" style="background:#fffbeb; border-color:#fef3c7;">
-          <div>
-            <div style="font-weight:700; color:#92400e;">ピンゾロ (1-1-1)</div>
-            <div style="font-size:11px; color:#b45309;">最強の役！総取り・5倍付け</div>
-          </div>
-          <span style="background:var(--amber); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">最強</span>
-        </div>
-        <div class="rule-item" style="background:#eef2ff; border-color:#e0e7ff;">
-          <div>
-            <div style="font-weight:700; color:#3730a3;">ゾロ目 (2-2-2 〜 6-6-6)</div>
-            <div style="font-size:11px; color:#4338ca;">3つ同じ数字が揃う・3倍付け</div>
-          </div>
-          <span style="background:var(--indigo); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">大勝ち</span>
-        </div>
-        <div class="rule-item" style="background:#ecfdf5; border-color:#d1fae5;">
-          <div>
-            <div style="font-weight:700; color:#065f46;">シション / シゴロ (4-5-6)</div>
-            <div style="font-size:11px; color:#047857;">4-5-6の順子目。強役・2倍付け</div>
-          </div>
-          <span style="background:var(--emerald); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">強役</span>
-        </div>
-        <div class="rule-item" style="background:#eff6ff; border-color:#dbeafe;">
-          <div>
-            <div style="font-weight:700; color:#1e40af;">通常の目 (出目: 1〜6)</div>
-            <div style="font-size:11px; color:#2563eb;">2個揃った時の残り1個が出目になる</div>
-          </div>
-          <span style="background:var(--primary); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">通常</span>
-        </div>
-        <div class="rule-item" style="background:#f4f4f5; border-color:#e4e4e7;">
-          <div>
-            <div style="font-weight:700; color:#3f3f46;">役なし (目なし)</div>
-            <div style="font-size:11px; color:#71717a;">何も揃わなかった状態（負けやすい）</div>
-          </div>
-          <span style="background:#71717a; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">なし</span>
-        </div>
-        <div class="rule-item" style="background:#fff1f2; border-color:#ffe4e6;">
-          <div>
-            <div style="font-weight:700; color:#9f1239;">ヒフミ (1-2-3)</div>
-            <div style="font-size:11px; color:#be123c;">最弱の役！即負け・2倍払い</div>
-          </div>
-          <span style="background:var(--rose); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">負け役</span>
-        </div>
-      </div>
-      <button onclick="closeRulesModal()" style="margin-top:12px; width:100%; border:none; background:#1d1d1f; color:#fff; padding:12px; font-weight:700; border-radius:12px; cursor:pointer;">
-        閉じる
-      </button>
     </div>
   </div>
 
   <script>
     /* ========================================================
-       音響制御 (Web Audio API - 外部ファイル不要)
+       音響制御 (Web Audio API)
        ======================================================== */
     let soundEnabled = true;
     let audioCtx = null;
@@ -758,553 +635,265 @@
       document.getElementById('sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
     }
 
-    function playClick() {
+    // ビールを注ぐ／乾杯の「チーン♪」音
+    function playCheersSound() {
       if (!soundEnabled) return;
       try {
         const ctx = getAudioCtx();
         if (!ctx) return;
+        const now = ctx.currentTime;
+
+        // グラスが合わさる高音ベルトーン
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1760, now); // A6
+        gain1.gain.setValueAtTime(0.25, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.45);
+
+        // 泡が弾けるシュワっとしたノイズ
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(587.33, now); // D5
+        osc2.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gain2.gain.setValueAtTime(0.15, now);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now);
+        osc2.stop(now + 0.2);
+      } catch (e) {}
+    }
+
+    // 減らすクリック音
+    function playPopDownSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.08);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.08);
       } catch (e) {}
     }
 
-    function playRollSound() {
+    // リセット音
+    function playResetSound() {
       if (!soundEnabled) return;
       try {
         const ctx = getAudioCtx();
         if (!ctx) return;
-        for (let i = 0; i < 6; i++) {
-          const t = ctx.currentTime + i * 0.08;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(300 + Math.random() * 400, t);
-          gain.gain.setValueAtTime(0.15, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.04);
-        }
-      } catch (e) {}
-    }
-
-    function playWinSound() {
-      if (!soundEnabled) return;
-      try {
-        const ctx = getAudioCtx();
-        if (!ctx) return;
-        [523.25, 659.25, 783.99].forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const t = ctx.currentTime + idx * 0.07;
-          osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(0.12, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.35);
-        });
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
       } catch (e) {}
     }
 
     /* ========================================================
-       タブ切り替え制御
-       ======================================================== */
-    function switchMainTab(tab) {
-      playClick();
-      document.getElementById('tab-counter-btn').classList.toggle('active', tab === 'counter');
-      document.getElementById('tab-chinchiro-btn').classList.toggle('active', tab === 'chinchiro');
-      document.getElementById('view-counter').classList.toggle('active', tab === 'counter');
-      document.getElementById('view-chinchiro').classList.toggle('active', tab === 'chinchiro');
-    }
-
-    function switchChinchiroSubTab(sub) {
-      playClick();
-      document.getElementById('subtab-game').classList.toggle('active', sub === 'game');
-      document.getElementById('subtab-free').classList.toggle('active', sub === 'free');
-      document.getElementById('chinchiro-game-mode').style.display = sub === 'game' ? 'flex' : 'none';
-      document.getElementById('chinchiro-free-mode').style.display = sub === 'free' ? 'flex' : 'none';
-    }
-
-    /* ========================================================
-       カウンター機能
+       カウンター＆ビール並び替えロジック
        ======================================================== */
     let count = 0;
     let stepValue = 1;
     const countDisplay = document.getElementById('count');
-    const incBtn = document.getElementById('increment');
+    const incLabel = document.getElementById('inc-label');
+    const emptyState = document.getElementById('empty-state');
+    const beerGrid = document.getElementById('beer-grid');
+    const beerArena = document.getElementById('beer-arena');
+    const cheersToast = document.getElementById('cheers-toast');
+
+    let toastTimer = null;
+    function triggerCheersToast(text = '✨ かんぱーい！') {
+      cheersToast.textContent = text;
+      cheersToast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        cheersToast.classList.remove('show');
+      }, 900);
+    }
 
     function setStep(val, btn) {
-      playClick();
       stepValue = val;
       document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      incBtn.textContent = '+' + stepValue;
+      incLabel.textContent = '+' + stepValue + ' 杯';
+      playPopDownSound();
     }
 
     function handleCountIncrement() {
-      playClick();
       count += stepValue;
       countDisplay.textContent = count;
+      renderBeerGrid();
+      playCheersSound();
+      triggerCheersToast(count % 10 === 0 ? '🎉 ' + count + '杯達成！かんぱーい！' : '✨ かんぱーい！ (' + count + '杯目)');
+
+      // 自動で最下部にスクロールして最新のビールを見せる
+      setTimeout(() => {
+        beerArena.scrollTo({
+          top: beerArena.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 50);
     }
 
     function handleCountDecrement() {
-      playClick();
+      if (count <= 0) return;
       count = Math.max(0, count - stepValue);
       countDisplay.textContent = count;
+      renderBeerGrid();
+      playPopDownSound();
     }
 
     function handleCountReset() {
-      playClick();
-      count = 0;
-      countDisplay.textContent = count;
+      if (count === 0) {
+        triggerCheersToast('すでに0杯です🍺');
+        return;
+      }
+      document.getElementById('reset-modal-count').textContent = count;
+      document.getElementById('reset-modal').classList.add('open');
     }
 
-    /* ========================================================
-       サイコロ描画・役判定共通ロジック
-       ======================================================== */
-    function renderDiceFace(el, val) {
-      const dotsContainer = el.querySelector('.dice-dots');
-      dotsContainer.innerHTML = '';
+    function closeResetModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('cancel-btn')) return;
+      document.getElementById('reset-modal').classList.remove('open');
+    }
 
-      if (val === 1) {
-        const dot = document.createElement('div');
-        dot.className = 'dot-red';
-        dotsContainer.appendChild(dot);
+    function confirmReset() {
+      count = 0;
+      countDisplay.textContent = count;
+      renderBeerGrid();
+      playResetSound();
+      document.getElementById('reset-modal').classList.remove('open');
+      triggerCheersToast('リセットしました（0杯）');
+    }
+
+    // ビールグリッドの描画（カウントに合わせて🍺をひとつづつ増やして並べる）
+    function renderBeerGrid() {
+      if (count === 0) {
+        emptyState.style.display = 'flex';
+        beerGrid.style.display = 'none';
+        beerGrid.innerHTML = '';
         return;
       }
 
-      // 2~6のドット配置座標 (%)
-      const positions = {
-        2: [[22, 22], [78, 78]],
-        3: [[22, 22], [50, 50], [78, 78]],
-        4: [[22, 22], [22, 78], [78, 22], [78, 78]],
-        5: [[22, 22], [22, 78], [50, 50], [78, 22], [78, 78]],
-        6: [[22, 20], [22, 50], [22, 80], [78, 20], [78, 50], [78, 80]],
-      };
+      emptyState.style.display = 'none';
+      beerGrid.style.display = 'grid';
 
-      (positions[val] || []).forEach(([x, y]) => {
-        const dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.style.left = x + '%';
-        dot.style.top = y + '%';
-        dot.style.transform = 'translate(-50%, -50%)';
-        dotsContainer.appendChild(dot);
-      });
-    }
+      const currentItemCount = beerGrid.children.length;
 
-    function evaluateDice(dice) {
-      const sorted = [...dice].sort((a, b) => a - b);
-      const [d1, d2, d3] = sorted;
-
-      if (d1 === 1 && d2 === 1 && d3 === 1) {
-        return { category: 'pinzoro', name: 'ピンゾロ', rank: 100, mult: 5, desc: '奇跡の出目！最強の勝ち役（5倍付け）', badgeClass: 'badge-pinzoro' };
-      }
-      if (d1 === d2 && d2 === d3) {
-        return { category: 'zorome', name: d1 + 'のゾロ目', rank: 80 + d1, mult: 3, desc: '3つすべて揃った大勝ち役（3倍付け）', badgeClass: 'badge-zorome' };
-      }
-      if (d1 === 4 && d2 === 5 && d3 === 6) {
-        return { category: 'shigoro', name: 'シション（シゴロ 4-5-6）', rank: 70, mult: 2, desc: '昇順の連番！強役（2倍付け）', badgeClass: 'badge-shigoro' };
-      }
-      if (d1 === 1 && d2 === 2 && d3 === 3) {
-        return { category: 'hifumi', name: 'ヒフミ (1-2-3)', rank: 1, mult: 2, desc: '最弱の出目…即負け（2倍払い）', badgeClass: 'badge-hifumi' };
-      }
-
-      let pt = null;
-      if (d1 === d2) pt = d3;
-      else if (d2 === d3) pt = d1;
-
-      if (pt !== null) {
-        return { category: 'normal', name: pt + 'の目', rank: 10 + pt, mult: 1, desc: '出目が「' + pt + '」に決まりました', badgeClass: 'badge-normal', point: pt };
-      }
-
-      return { category: 'menashi', name: '役なし（目なし）', rank: 5, mult: 1, desc: '3つの目がバラバラで役不成立', badgeClass: 'badge-menashi' };
-    }
-
-    /* ========================================================
-       フリーロール機能
-       ======================================================== */
-    let isFreeRolling = false;
-
-    function handleFreeRoll() {
-      if (isFreeRolling) return;
-      isFreeRolling = true;
-      playRollSound();
-
-      const d1El = document.getElementById('free-dice-1');
-      const d2El = document.getElementById('free-dice-2');
-      const d3El = document.getElementById('free-dice-3');
-      const btn = document.getElementById('free-roll-btn');
-
-      d1El.classList.add('rolling');
-      d2El.classList.add('rolling');
-      d3El.classList.add('rolling');
-      btn.disabled = true;
-      btn.textContent = '振っています…';
-
-      const interval = setInterval(() => {
-        renderDiceFace(d1El, Math.floor(Math.random() * 6) + 1);
-        renderDiceFace(d2El, Math.floor(Math.random() * 6) + 1);
-        renderDiceFace(d3El, Math.floor(Math.random() * 6) + 1);
-      }, 60);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        d1El.classList.remove('rolling');
-        d2El.classList.remove('rolling');
-        d3El.classList.remove('rolling');
-
-        const f1 = Math.floor(Math.random() * 6) + 1;
-        const f2 = Math.floor(Math.random() * 6) + 1;
-        const f3 = Math.floor(Math.random() * 6) + 1;
-        const finalDice = [f1, f2, f3];
-
-        renderDiceFace(d1El, f1);
-        renderDiceFace(d2El, f2);
-        renderDiceFace(d3El, f3);
-
-        const yaku = evaluateDice(finalDice);
-        const badge = document.getElementById('free-badge');
-        badge.className = 'badge ' + yaku.badgeClass;
-        badge.textContent = yaku.name;
-        document.getElementById('free-desc').textContent = yaku.desc;
-        document.getElementById('free-digits').textContent = '出目: ' + f1 + '・' + f2 + '・' + f3;
-
-        if (yaku.rank >= 70) playWinSound();
-
-        btn.disabled = false;
-        btn.textContent = 'サイコロを振る';
-        isFreeRolling = false;
-      }, 650);
-    }
-
-    /* ========================================================
-       チンチロリン対戦ゲームロジック
-       ======================================================== */
-    const players = [
-      { id: 'p1', name: 'あなた (P1)', isCpu: false, chips: 1000 },
-      { id: 'p2', name: 'CPU 太郎 (P2)', isCpu: true, chips: 1000 },
-      { id: 'p3', name: 'CPU 花子 (P3)', isCpu: true, chips: 1000 },
-    ];
-
-    let parentIdx = 0;
-    let roundCount = 0; // 何人親が回ったか
-    let gameState = 'betting'; // 'betting' | 'parent_roll' | 'child_roll' | 'round_end' | 'game_over'
-    let parentYaku = null;
-    let parentDice = [1, 1, 1];
-    let parentRollCount = 0;
-    let childQueue = [];
-    let currentChildQueueIdx = 0;
-    let currentChildRollCount = 0;
-    let currentChildDice = [1, 1, 1];
-    let bets = { p1: 100, p2: 100, p3: 100 };
-    let isGameRolling = false;
-
-    function initGame() {
-      parentIdx = 0;
-      roundCount = 0;
-      startParentRound(parentIdx);
-      updatePlayerChipsUI();
-      // 初期ダイス描画
-      renderDiceFace(document.getElementById('game-dice-1'), 1);
-      renderDiceFace(document.getElementById('game-dice-2'), 2);
-      renderDiceFace(document.getElementById('game-dice-3'), 3);
-      renderDiceFace(document.getElementById('free-dice-1'), 4);
-      renderDiceFace(document.getElementById('free-dice-2'), 5);
-      renderDiceFace(document.getElementById('free-dice-3'), 6);
-    }
-
-    function startParentRound(pIdx) {
-      parentIdx = pIdx;
-      parentYaku = null;
-      parentRollCount = 0;
-      childQueue = players.filter((_, idx) => idx !== parentIdx);
-      currentChildQueueIdx = 0;
-      currentChildRollCount = 0;
-
-      // 各子の賭け金 (所持金の10%程度、最大100)
-      childQueue.forEach(c => {
-        bets[c.id] = Math.min(100, Math.max(10, Math.floor(c.chips * 0.1)));
-      });
-
-      gameState = 'parent_roll';
-      updateGameUI();
-    }
-
-    function gamePassParent() {
-      if (gameState !== 'parent_roll') return;
-      playClick();
-      const nextIdx = (parentIdx + 1) % players.length;
-      document.getElementById('game-message').textContent = players[parentIdx].name + 'は親をパスしました。親が交代します。';
-      setTimeout(() => {
-        startParentRound(nextIdx);
-      }, 1000);
-    }
-
-    function handleGameAction() {
-      if (isGameRolling) return;
-
-      if (gameState === 'parent_roll') {
-        runParentRoll();
-      } else if (gameState === 'child_roll') {
-        runChildRoll();
-      } else if (gameState === 'round_end') {
-        nextTurnAfterRound();
-      } else if (gameState === 'game_over') {
-        resetAllGame();
-      }
-    }
-
-    function animateGameDice(callback) {
-      isGameRolling = true;
-      playRollSound();
-
-      const d1El = document.getElementById('game-dice-1');
-      const d2El = document.getElementById('game-dice-2');
-      const d3El = document.getElementById('game-dice-3');
-      const btn = document.getElementById('game-action-btn');
-
-      d1El.classList.add('rolling');
-      d2El.classList.add('rolling');
-      d3El.classList.add('rolling');
-      btn.disabled = true;
-
-      const interval = setInterval(() => {
-        renderDiceFace(d1El, Math.floor(Math.random() * 6) + 1);
-        renderDiceFace(d2El, Math.floor(Math.random() * 6) + 1);
-        renderDiceFace(d3El, Math.floor(Math.random() * 6) + 1);
-      }, 60);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        d1El.classList.remove('rolling');
-        d2El.classList.remove('rolling');
-        d3El.classList.remove('rolling');
-
-        const f1 = Math.floor(Math.random() * 6) + 1;
-        const f2 = Math.floor(Math.random() * 6) + 1;
-        const f3 = Math.floor(Math.random() * 6) + 1;
-        const finalDice = [f1, f2, f3];
-
-        renderDiceFace(d1El, f1);
-        renderDiceFace(d2El, f2);
-        renderDiceFace(d3El, f3);
-
-        const yaku = evaluateDice(finalDice);
-        btn.disabled = false;
-        isGameRolling = false;
-        callback(finalDice, yaku);
-      }, 600);
-    }
-
-    function runParentRoll() {
-      parentRollCount++;
-      animateGameDice((dice, yaku) => {
-        parentDice = dice;
-        // 役が出た、または3回振ったら決定
-        if (yaku.category !== 'menashi' || parentRollCount >= 3) {
-          parentYaku = yaku;
-          document.getElementById('game-parent-yaku-display').textContent = yaku.name;
-          document.getElementById('game-parent-dice-display').textContent = '[' + dice.join('-') + ']';
-          document.getElementById('game-message').textContent = '親【' + players[parentIdx].name + '】の役が【' + yaku.name + '】に確定！続いて子の番です。';
-
-          setTimeout(() => {
-            gameState = 'child_roll';
-            currentChildQueueIdx = 0;
-            currentChildRollCount = 0;
-            updateGameUI();
-            checkCpuAutoTurn();
-          }, 1200);
-        } else {
-          document.getElementById('game-message').textContent = '親の出目は役なし（目なし）でした。残り ' + (3 - parentRollCount) + ' 回振れます。';
-          updateGameUI();
-          checkCpuAutoTurn();
+      if (count > currentItemCount) {
+        // 新しく増えた分だけ🍺を追加（アニメーション付き）
+        const fragment = document.createDocumentFragment();
+        for (let i = currentItemCount + 1; i <= count; i++) {
+          const item = createBeerItem(i);
+          fragment.appendChild(item);
         }
-      });
-    }
-
-    function runChildRoll() {
-      const child = childQueue[currentChildQueueIdx];
-      currentChildRollCount++;
-
-      animateGameDice((dice, yaku) => {
-        currentChildDice = dice;
-
-        if (yaku.category !== 'menashi' || currentChildRollCount >= 3) {
-          document.getElementById('game-child-yaku-display').textContent = yaku.name;
-          document.getElementById('game-child-dice-display').textContent = '[' + dice.join('-') + ']';
-
-          // 親と勝負
-          settleChildBattle(child, yaku);
-
-          setTimeout(() => {
-            currentChildQueueIdx++;
-            currentChildRollCount = 0;
-
-            if (currentChildQueueIdx < childQueue.length) {
-              updateGameUI();
-              checkCpuAutoTurn();
-            } else {
-              // 全員終了
-              gameState = 'round_end';
-              document.getElementById('game-message').textContent = '子全員との勝負が終了しました！「親交代」を押してください。';
-              updateGameUI();
-            }
-          }, 1800);
-        } else {
-          document.getElementById('game-message').textContent = child.name + 'は目なしでした。残り ' + (3 - currentChildRollCount) + ' 回振れます。';
-          updateGameUI();
-          checkCpuAutoTurn();
-        }
-      });
-    }
-
-    function settleChildBattle(child, childYaku) {
-      const bet = bets[child.id] || 100;
-      let won = false;
-      let draw = false;
-      let mult = 1;
-
-      if (childYaku.rank > parentYaku.rank) {
-        won = true;
-        mult = childYaku.mult;
-        if (parentYaku.category === 'hifumi') mult = Math.max(mult, 2);
-      } else if (childYaku.rank < parentYaku.rank) {
-        won = false;
-        mult = parentYaku.mult;
-        if (childYaku.category === 'hifumi') mult = Math.max(mult, 2);
-      } else {
-        draw = true;
-      }
-
-      const diff = bet * mult;
-      const parentPlayer = players[parentIdx];
-
-      if (draw) {
-        document.getElementById('game-message').textContent = child.name + '【' + childYaku.name + '】 vs 親【' + parentYaku.name + '】: 引き分け！';
-      } else if (won) {
-        child.chips += diff;
-        parentPlayer.chips = Math.max(0, parentPlayer.chips - diff);
-        document.getElementById('game-message').textContent = child.name + 'の勝ち！親から ' + diff + '点 獲得！';
-        playWinSound();
-      } else {
-        child.chips = Math.max(0, child.chips - diff);
-        parentPlayer.chips += diff;
-        document.getElementById('game-message').textContent = child.name + 'の負け…親へ ' + diff + '点 支払い。';
-      }
-
-      updatePlayerChipsUI();
-    }
-
-    function nextTurnAfterRound() {
-      playClick();
-      roundCount++;
-      if (roundCount >= players.length) {
-        gameState = 'game_over';
-        document.getElementById('game-message').textContent = '全員に親が回りました！ゲーム終了です！お疲れ様でした。';
-        document.getElementById('game-action-btn').textContent = '最初からもう一度遊ぶ';
-      } else {
-        const nextIdx = (parentIdx + 1) % players.length;
-        startParentRound(nextIdx);
-      }
-    }
-
-    function resetAllGame() {
-      playClick();
-      players.forEach(p => p.chips = 1000);
-      initGame();
-    }
-
-    function checkCpuAutoTurn() {
-      if (isGameRolling) return;
-      if (gameState === 'parent_roll' && players[parentIdx].isCpu) {
-        setTimeout(runParentRoll, 900);
-      } else if (gameState === 'child_roll') {
-        const child = childQueue[currentChildQueueIdx];
-        if (child && child.isCpu) {
-          setTimeout(runChildRoll, 900);
+        beerGrid.appendChild(fragment);
+      } else if (count < currentItemCount) {
+        // 減った分だけ後ろから削除
+        while (beerGrid.children.length > count) {
+          beerGrid.removeChild(beerGrid.lastChild);
         }
       }
     }
 
-    function updateGameUI() {
-      const parentPlayer = players[parentIdx];
-      document.getElementById('game-parent-label').textContent = '👑 親: ' + parentPlayer.name;
-      document.getElementById('game-round-indicator').textContent = '周回 ' + (roundCount + 1) + '/' + players.length;
+    // ビールジョッキ要素の作成
+    function createBeerItem(index) {
+      const el = document.createElement('div');
+      el.className = 'beer-item';
+      el.title = index + '杯目のビール！タップで乾杯';
 
-      const passBtn = document.getElementById('game-pass-parent-btn');
-      passBtn.style.display = (gameState === 'parent_roll' && !parentPlayer.isCpu) ? 'block' : 'none';
+      const emoji = document.createElement('span');
+      emoji.className = 'beer-emoji';
+      emoji.textContent = '🍺';
 
-      const btn = document.getElementById('game-action-btn');
+      const num = document.createElement('span');
+      num.className = 'beer-number';
+      num.textContent = '#' + index;
 
-      if (gameState === 'parent_roll') {
-        document.getElementById('game-child-title').textContent = '👤 次の子';
-        document.getElementById('game-child-yaku-display').textContent = '親の役決定待ち';
-        document.getElementById('game-child-dice-display').textContent = '---';
-        if (parentPlayer.isCpu) {
-          btn.textContent = '親(CPU)が振っています…';
-          btn.disabled = true;
-        } else {
-          btn.textContent = '親がサイコロを振る (' + (parentRollCount + 1) + '/3回目)';
-          btn.disabled = false;
-        }
-      } else if (gameState === 'child_roll') {
-        const child = childQueue[currentChildQueueIdx];
-        if (child) {
-          document.getElementById('game-child-title').textContent = '👤 ' + child.name + ' (賭:' + bets[child.id] + '点)';
-          if (child.isCpu) {
-            btn.textContent = child.name + '(CPU)が振っています…';
-            btn.disabled = true;
-          } else {
-            btn.textContent = '子がサイコロを振る (' + (currentChildRollCount + 1) + '/3回目)';
-            btn.disabled = false;
-          }
-        }
-      } else if (gameState === 'round_end') {
-        btn.textContent = (roundCount + 1 >= players.length) ? '最終結果を確認' : '親を交代して次へ';
-        btn.disabled = false;
+      el.appendChild(emoji);
+      el.appendChild(num);
+
+      // ビールを直接タップした時の乾杯リアクション
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playCheersSound();
+        triggerCheersToast('🍺 ' + index + '杯目にかんぱーい！');
+
+        // 泡パーティクル発生
+        createBubbleBurst(el);
+      });
+
+      return el;
+    }
+
+    // 泡のエフェクト演出
+    function createBubbleBurst(targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const arenaRect = beerArena.getBoundingClientRect();
+      const bubbles = ['🫧', '✨', '🍻'];
+      for (let i = 0; i < 3; i++) {
+        const bubble = document.createElement('span');
+        bubble.className = 'bubble-burst';
+        bubble.textContent = bubbles[Math.floor(Math.random() * bubbles.length)];
+        const offsetX = (Math.random() - 0.5) * 30;
+        bubble.style.setProperty('--bx', offsetX + 'px');
+        bubble.style.left = (rect.left - arenaRect.left + rect.width / 2 - 8) + 'px';
+        bubble.style.top = (rect.top - arenaRect.top + beerArena.scrollTop) + 'px';
+        beerArena.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 600);
       }
     }
 
-    function updatePlayerChipsUI() {
-      const list = document.getElementById('game-player-chips-list');
-      list.innerHTML = '';
-      players.forEach((p, idx) => {
-        const item = document.createElement('div');
-        item.style.background = '#f2f2f7';
-        item.style.padding = '6px';
-        item.style.borderRadius = '8px';
-        item.style.textAlign = 'center';
-        const isParent = idx === parentIdx;
-        item.innerHTML = '<div style="font-weight:700; color:' + (isParent ? '#b45309' : '#1d1d1f') + ';">' + (isParent ? '👑' : '') + p.name + '</div><div style="color:#d97706; font-weight:700;">' + p.chips + '点</div>';
-        list.appendChild(item);
-      });
-    }
-
-    /* モーダル */
-    function openRulesModal() {
-      playClick();
-      document.getElementById('rules-modal').classList.add('open');
-    }
-    function closeRulesModal() {
-      playClick();
-      document.getElementById('rules-modal').classList.remove('open');
+    // アリーナの余白タップでもカウントアップ
+    function handleArenaClick(e) {
+      if (e.target === beerArena || e.target === emptyState || e.target.closest('#empty-state')) {
+        handleCountIncrement();
+      }
     }
 
     // 初期化実行
     window.onload = () => {
-      initGame();
+      renderBeerGrid();
     };
+
+    // ダブルタップ（連打）によるズームの防止
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 350) {
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+          e.preventDefault();
+        }
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    document.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+    });
   </script>
 </body>
 </html>

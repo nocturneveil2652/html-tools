@@ -1,54 +1,26 @@
 import React, { useState } from 'react';
-import { TabType } from './types';
 import { CounterView } from './components/CounterView';
-import { ChinchiroView } from './components/ChinchiroView';
-import { Volume2, VolumeX, Calculator, Dices } from 'lucide-react';
-import { playClickSound } from './utils/sound';
+import { Volume2, VolumeX } from 'lucide-react';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<TabType>('counter');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
-  const handleTabChange = (tab: TabType) => {
-    playClickSound(soundEnabled);
-    setCurrentTab(tab);
-  };
-
   return (
-    <div className="flex flex-col h-screen h-[100dvh] w-full bg-[#f5f5f7] overflow-hidden">
-      {/* 最上部：切り替えタブバー */}
+    <div className="flex flex-col h-screen h-[100dvh] w-full bg-[#f8fafc] overflow-hidden">
+      {/* 最上部：ヘッダーバー */}
       <header className="shrink-0 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 px-4 py-2.5 z-20">
         <div className="max-w-md mx-auto flex items-center justify-between gap-3">
-          {/* セグメント切り替えタブ */}
-          <div
-            id="tab-group"
-            className="flex-1 bg-neutral-100 p-1 rounded-xl flex items-center shadow-inner border border-neutral-200/60"
+          <a
+            href="../"
+            className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 transition-colors"
           >
-            <button
-              id="tab-counter"
-              onClick={() => handleTabChange('counter')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                currentTab === 'counter'
-                  ? 'bg-white text-neutral-900 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-800'
-              }`}
-            >
-              <Calculator className="w-4 h-4" />
-              <span>カウンター</span>
-            </button>
+            ← TOP
+          </a>
 
-            <button
-              id="tab-chinchiro"
-              onClick={() => handleTabChange('chinchiro')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                currentTab === 'chinchiro'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-800'
-              }`}
-            >
-              <Dices className="w-4 h-4" />
-              <span>チンチロリン</span>
-            </button>
+          {/* アプリタイトル */}
+          <div className="flex items-center gap-2 bg-amber-100 border border-amber-200 text-amber-900 font-extrabold px-3.5 py-1.5 rounded-full text-sm">
+            <span className="text-base">🍺</span>
+            <span>ビールカウンター</span>
           </div>
 
           {/* 音声トグルボタン */}
@@ -59,26 +31,22 @@ export default function App() {
             title={soundEnabled ? '効果音: ON' : '効果音: OFF'}
             className={`p-2 rounded-xl border transition-colors ${
               soundEnabled
-                ? 'bg-neutral-100 text-neutral-700 border-neutral-200 hover:bg-neutral-200/70'
-                : 'bg-neutral-100 text-neutral-400 border-neutral-200 hover:bg-neutral-200/70'
+                ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/70'
+                : 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200/70'
             }`}
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-neutral-700" />
+              <Volume2 className="w-4 h-4 text-slate-700" />
             ) : (
-              <VolumeX className="w-4 h-4 text-neutral-400" />
+              <VolumeX className="w-4 h-4 text-slate-400" />
             )}
           </button>
         </div>
       </header>
 
       {/* メインビュー */}
-      <main className="flex-1 relative overflow-hidden">
-        {currentTab === 'counter' ? (
-          <CounterView soundEnabled={soundEnabled} />
-        ) : (
-          <ChinchiroView soundEnabled={soundEnabled} />
-        )}
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        <CounterView soundEnabled={soundEnabled} />
       </main>
     </div>
   );

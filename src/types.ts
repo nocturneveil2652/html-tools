@@ -1,4 +1,4 @@
-export type TabType = 'counter' | 'chinchiro';
+export type TabType = 'counter';
 
 export type YakuCategory =
   | 'pinzoro'   // ピンゾロ (1-1-1)
