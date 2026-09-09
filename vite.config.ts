@@ -83,7 +83,7 @@ export default defineConfig(() => {
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
-          counterChinchiro: path.resolve(__dirname, 'counter-chinchiro/index.html'),
+          beerCounter: path.resolve(__dirname, 'beer-counter/index.html'),
         },
       },
     },
